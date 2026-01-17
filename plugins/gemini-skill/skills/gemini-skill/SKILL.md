@@ -1,17 +1,17 @@
 ---
-name: google-skill
-description: Query Google NotebookLM for source-grounded answers from your documents. Includes Gemini integration, browser automation, and library management.
+name: Gemini-skill
+description: Query Gemini NotebookLM for source-grounded answers from your documents. Includes Gemini integration, browser automation, and library management.
 ---
 
 # NotebookLM Research Assistant Skill
 
-Interact with Google NotebookLM to query documentation with Gemini's source-grounded answers. Each question opens a fresh browser session, retrieves the answer exclusively from your uploaded documents, and closes.
+Interact with Gemini NotebookLM to query documentation with Gemini's source-grounded answers. Each question opens a fresh browser session, retrieves the answer exclusively from your uploaded documents, and closes.
 
 ## When to Use This Skill
 
 Trigger when user:
 - Mentions NotebookLM explicitly
-- Shares NotebookLM URL (`https://notebooklm.google.com/notebook/...`)
+- Shares NotebookLM URL (`https://notebooklm.Gemini.com/notebook/...`)
 - Asks to query their notebooks/documentation
 - Wants to add documentation to NotebookLM library
 - Uses phrases like "ask my NotebookLM", "check my docs", "query my notebook"
@@ -68,15 +68,15 @@ If not authenticated, proceed to setup.
 
 ### Step 2: Authenticate (One-Time Setup)
 ```bash
-# Browser MUST be visible for manual Google login
+# Browser MUST be visible for manual Gemini login
 python scripts/run.py auth_manager.py setup
 ```
 
 **Important:**
 - Browser is VISIBLE for authentication
 - Browser window opens automatically
-- User must manually log in to Google
-- Tell user: "A browser window will open for Google login"
+- User must manually log in to Gemini
+- Tell user: "A browser window will open for Gemini login"
 
 ### Step 3: Manage Notebook Library
 
@@ -90,7 +90,7 @@ python scripts/run.py notebook_manager.py list
 
 # Add notebook to library (ALL parameters are REQUIRED!)
 python scripts/run.py notebook_manager.py add \
-  --url "https://notebooklm.google.com/notebook/..." \
+  --url "https://notebooklm.Gemini.com/notebook/..." \
   --name "Descriptive Name" \
   --description "What this notebook contains" \  # REQUIRED - ASK USER IF UNKNOWN!
   --topics "topic1,topic2,topic3"  # REQUIRED - ASK USER IF UNKNOWN!
@@ -235,7 +235,7 @@ Synthesize and respond to user
 |---------|----------|
 | ModuleNotFoundError | Use `run.py` wrapper |
 | Authentication fails | Browser must be visible for setup! --show-browser |
-| Rate limit (50/day) | Wait or switch Google account |
+| Rate limit (50/day) | Wait or switch Gemini account |
 | Browser crashes | `python scripts/run.py cleanup_manager.py --preserve-library` |
 | Notebook not found | Check with `notebook_manager.py list` |
 
@@ -251,7 +251,7 @@ Synthesize and respond to user
 ## Limitations
 
 - No session persistence (each question = new browser)
-- Rate limits on free Google accounts (50 queries/day)
+- Rate limits on free Gemini accounts (50 queries/day)
 - Manual upload required (user must add docs to NotebookLM)
 - Browser overhead (few seconds per question)
 

@@ -1,5 +1,5 @@
 {
-  "name": "google-skill",
+  "name": "gemini",
   "description": "Query Google NotebookLM for source-grounded answers from your documents. Includes Gemini integration, browser automation, and library management.",
   "version": "1.0.0",
   "author": {
