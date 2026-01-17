@@ -9,9 +9,9 @@
   },
   "plugins": [
     {
-      "name": "google-skill",
-      "description": "Query Google NotebookLM for source-grounded answers from your documents. Includes Gemini integration, browser automation, and library management.",
-      "source": "./plugins/google-skill",
+      "name": "gemini-skill",
+      "description": "Query Gemini NotebookLM for source-grounded answers from your documents. Includes Gemini integration, browser automation, and library management.",
+      "source": "./plugins/gemini-skill",
       "category": "productivity-organization"
     }
   ]
