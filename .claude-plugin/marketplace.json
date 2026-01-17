@@ -1,0 +1,18 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "agent-plugins",
+  "version": "1.0.0",
+  "description": "A curated collection of Claude Code skills and agent plugins for enhanced AI workflows and productivity",
+  "owner": {
+    "name": "istarwyh",
+    "email": "istarwyh@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "google-skill",
+      "description": "Query Google NotebookLM notebooks directly from Claude Code for source-grounded, citation-backed answers from Gemini. Features browser automation, library management, persistent auth, and Gemini image generation. Reduces hallucinations by answering exclusively from your uploaded documents.",
+      "source": "./google-skill",
+      "category": "productivity-organization"
+    }
+  ]
+}
