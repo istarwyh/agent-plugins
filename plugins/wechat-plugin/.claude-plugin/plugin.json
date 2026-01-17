@@ -1,0 +1,9 @@
+{
+  "name": "wechat-plugin",
+  "description": "Wechat plugin for Claude Code.",
+  "version": "1.0.0",
+  "author": {
+    "name": "xiaohui",
+    "email": "talk@xiaohui.cool"
+  }
+}
