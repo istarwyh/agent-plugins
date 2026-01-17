@@ -1,6 +1,6 @@
 {
   "name": "gemini-plugin",
-  "description": "Query Google NotebookLM for source-grounded answers from your documents. Includes Gemini integration, browser automation, and library management.",
+  "description": "Interact with Google Gemini for AI-powered conversations, Q&A, and image generation. Includes browser automation and persistent authentication.",
   "version": "1.0.0",
   "author": {
     "name": "xiaohui",
