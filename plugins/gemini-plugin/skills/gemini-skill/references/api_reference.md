@@ -1,6 +1,6 @@
-# NotebookLM Skill API Reference
+# NotebookLM & Gemini Skill API Reference
 
-Complete API documentation for all NotebookLM skill modules.
+Complete API documentation for all NotebookLM and Gemini skill modules.
 
 ## Important: Always Use run.py Wrapper
 
@@ -40,6 +40,93 @@ python scripts/run.py ask_question.py --question "..." --show-browser
 - `--show-browser`: Make browser visible
 
 **Returns:** Answer text with follow-up prompt appended
+
+### ask_gemini.py
+Query Gemini directly for general knowledge and AI assistance.
+
+```bash
+# Basic usage
+python scripts/run.py ask_gemini.py --question "Your question"
+
+# Show browser (debugging)
+python scripts/run.py ask_gemini.py --question "..." --show-browser
+```
+
+**Parameters:**
+- `--question` (required): Question to ask Gemini
+- `--show-browser`: Make browser visible (useful for debugging)
+
+**Returns:** Answer text from Gemini
+
+**Use Cases:**
+- General knowledge questions
+- Creative writing and brainstorming
+- Code generation and explanation
+- Image generation queries
+- Multi-modal questions
+- Real-time information (if available)
+
+**Differences from NotebookLM:**
+- No notebook/document required
+- Not limited to uploaded sources
+- Broader knowledge base
+- Can generate images and creative content
+- Faster responses (no document context to load)
+
+### generate_image.py
+Generate images using Gemini's image generation capabilities.
+
+```bash
+# Basic usage
+python scripts/run.py generate_image.py --prompt "Your image description"
+
+# Specify output directory
+python scripts/run.py generate_image.py --prompt "..." --output ./my_images
+
+# Show browser (debugging)
+python scripts/run.py generate_image.py --prompt "..." --show-browser
+```
+
+**Parameters:**
+- `--prompt` (required): Image generation prompt/description
+- `--output`: Output directory for images (default: current directory)
+- `--show-browser`: Make browser visible (useful for debugging)
+
+**Returns:** List of saved image paths
+
+**How it works:**
+1. Clicks the "Image" button to activate image generation mode
+2. Submits the prompt
+3. Waits for `generated-image` element to appear
+4. Detects images from Google's CDN (`googleusercontent.com`)
+5. Screenshots images directly from browser (most reliable)
+6. Falls back to URL download if screenshot fails
+7. Saves as PNG files with timestamps
+
+**Features:**
+- Precise image detection using `generated-image` selectors
+- Screenshot-based saving (bypasses network issues)
+- Automatic retry with URL download fallback
+- Supports multiple images per generation
+- Timestamped filenames prevent overwrites
+
+**Example Output:**
+```
+generated_images/gemini_image_1_1767345225.png
+generated_images/gemini_image_2_1767345225.png
+```
+
+**Examples:**
+```bash
+# Generate artwork
+python scripts/run.py generate_image.py --prompt "A serene mountain landscape at sunset"
+
+# Generate illustrations
+python scripts/run.py generate_image.py --prompt "画一个可爱的雪人"
+
+# Generate technical diagrams
+python scripts/run.py generate_image.py --prompt "A flowchart showing the software development lifecycle"
+```
 
 ### notebook_manager.py
 Manage notebook library with CRUD operations.
@@ -156,11 +243,19 @@ python scripts/run.py ask_question.py --question "..."
 import subprocess
 import json
 
-# Always use run.py wrapper
+# Query NotebookLM (with notebook)
 result = subprocess.run([
     "python", "scripts/run.py", "ask_question.py",
     "--question", "Your question",
     "--notebook-id", "notebook-id"
+], capture_output=True, text=True)
+
+answer = result.stdout
+
+# Query Gemini (no notebook required)
+result = subprocess.run([
+    "python", "scripts/run.py", "ask_gemini.py",
+    "--question", "What is artificial intelligence?"
 ], capture_output=True, text=True)
 
 answer = result.stdout

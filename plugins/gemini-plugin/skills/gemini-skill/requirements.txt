@@ -6,5 +6,8 @@
 # (Chrome is required, not Chromium, for cross-platform reliability)
 patchright==1.55.2
 
+# HTTP requests for image download
+requests==2.31.0
+
 # Environment management
 python-dotenv==1.0.0

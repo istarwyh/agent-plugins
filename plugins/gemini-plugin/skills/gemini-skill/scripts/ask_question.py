@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from auth_manager import AuthManager
 from notebook_manager import NotebookLibrary
-from config import QUERY_INPUT_SELECTORS, RESPONSE_SELECTORS
+from config import QUERY_INPUT_SELECTORS, RESPONSE_SELECTORS, PAGE_LOAD_TIMEOUT
 from browser_utils import BrowserFactory, StealthUtils
 
 
@@ -74,10 +74,10 @@ def ask_notebooklm(question: str, notebook_url: str, headless: bool = True) -> s
         # Navigate to notebook
         page = context.new_page()
         print("  🌐 Opening notebook...")
-        page.goto(notebook_url, wait_until="domcontentloaded")
+        page.goto(notebook_url, wait_until="domcontentloaded", timeout=PAGE_LOAD_TIMEOUT)
 
         # Wait for NotebookLM
-        page.wait_for_url(re.compile(r"^https://notebooklm\.google\.com/"), timeout=10000)
+        page.wait_for_url(re.compile(r"^https://notebooklm\.google\.com/"), timeout=PAGE_LOAD_TIMEOUT)
 
         # Wait for query input (MCP approach)
         print("  ⏳ Waiting for query input...")
@@ -87,7 +87,7 @@ def ask_notebooklm(question: str, notebook_url: str, headless: bool = True) -> s
             try:
                 query_element = page.wait_for_selector(
                     selector,
-                    timeout=10000,
+                    timeout=60000,  # 60 seconds for query input
                     state="visible"  # Only check visibility, not disabled!
                 )
                 if query_element:

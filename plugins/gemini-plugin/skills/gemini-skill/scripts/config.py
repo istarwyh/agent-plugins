@@ -41,4 +41,4 @@ USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
 # Timeouts
 LOGIN_TIMEOUT_MINUTES = 10
 QUERY_TIMEOUT_SECONDS = 120
-PAGE_LOAD_TIMEOUT = 30000
+PAGE_LOAD_TIMEOUT = 300000  # Increased to 300 seconds (5 minutes) for slow connections

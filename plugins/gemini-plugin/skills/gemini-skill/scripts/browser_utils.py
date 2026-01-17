@@ -6,10 +6,60 @@ Handles browser launching, stealth features, and common interactions
 import json
 import time
 import random
+import platform
+import os
+import shutil
 from typing import Optional, List
+from pathlib import Path
 
 from patchright.sync_api import Playwright, BrowserContext, Page
 from config import BROWSER_PROFILE_DIR, STATE_FILE, BROWSER_ARGS, USER_AGENT
+
+
+def get_chrome_path() -> Optional[str]:
+    """
+    Get Chrome executable path for current platform
+
+    Returns:
+        Path to Chrome executable, or None to use default Chromium
+    """
+    system = platform.system()
+
+    if system == "Darwin":  # macOS
+        chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        if os.path.exists(chrome_path):
+            return chrome_path
+
+    elif system == "Windows":
+        # Try common Windows paths
+        possible_paths = [
+            os.path.expandvars(r"%ProgramFiles%\Google\Chrome\Application\chrome.exe"),
+            os.path.expandvars(r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"),
+            os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe"),
+        ]
+        for path in possible_paths:
+            if os.path.exists(path):
+                return path
+
+    elif system == "Linux":
+        # Try to find chrome in PATH
+        chrome_cmd = shutil.which("google-chrome") or shutil.which("chrome") or shutil.which("chromium")
+        if chrome_cmd:
+            return chrome_cmd
+
+        # Try common Linux paths
+        possible_paths = [
+            "/usr/bin/google-chrome",
+            "/usr/bin/chrome",
+            "/usr/bin/chromium",
+            "/usr/bin/chromium-browser",
+        ]
+        for path in possible_paths:
+            if os.path.exists(path):
+                return path
+
+    # Return None to use Patchright's bundled Chromium
+    return None
 
 
 class BrowserFactory:
@@ -25,16 +75,26 @@ class BrowserFactory:
         Launch a persistent browser context with anti-detection features
         and cookie workaround.
         """
+        # Get Chrome path for current platform
+        chrome_path = get_chrome_path()
+
+        # Build launch args
+        launch_args = {
+            "user_data_dir": user_data_dir,
+            "headless": headless,
+            "no_viewport": True,
+            "ignore_default_args": ["--enable-automation"],
+            "user_agent": USER_AGENT,
+            "args": BROWSER_ARGS
+        }
+
+        # Only set executable_path if Chrome is found
+        # Otherwise use Patchright's bundled Chromium
+        if chrome_path:
+            launch_args["executable_path"] = chrome_path
+
         # Launch persistent context
-        context = playwright.chromium.launch_persistent_context(
-            user_data_dir=user_data_dir,
-            channel="chrome",  # Use real Chrome
-            headless=headless,
-            no_viewport=True,
-            ignore_default_args=["--enable-automation"],
-            user_agent=USER_AGENT,
-            args=BROWSER_ARGS
-        )
+        context = playwright.chromium.launch_persistent_context(**launch_args)
 
         # Cookie Workaround for Playwright bug #36139
         # Session cookies (expires=-1) don't persist in user_data_dir automatically
