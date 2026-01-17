@@ -25,6 +25,6 @@
       "description": "Meta plugin for Claude Code.",
       "source": "./plugins/meta-plugin",
       "category": "productivity-organization"
-    },
+    }
   ]
 }
