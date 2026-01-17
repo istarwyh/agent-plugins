@@ -13,6 +13,18 @@
       "description": "Query Gemini NotebookLM for source-grounded answers from your documents. Includes Gemini integration, browser automation, and library management.",
       "source": "./plugins/gemini-plugin",
       "category": "productivity-organization"
-    }
+    },    
+    {
+      "name": "wechat-plugin",
+      "description": "Wechat plugin for Claude Code.",
+      "source": "./plugins/wechat-plugin",
+      "category": "productivity-organization"
+    },
+    {
+      "name": "meta-plugin",
+      "description": "Meta plugin for Claude Code.",
+      "source": "./plugins/meta-plugin",
+      "category": "productivity-organization"
+    },
   ]
 }
