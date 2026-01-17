@@ -32,7 +32,7 @@ Each skill is a self-contained folder with instructions, scripts, and resources 
 
 ### Communication & Writing
 
-- [**Google Skill (NotebookLM)**](./google-skill/) - Query Google NotebookLM notebooks directly from Claude Code for source-grounded, citation-backed answers from Gemini. Features browser automation, library management, and Gemini image generation. Reduces hallucinations by answering exclusively from your uploaded documents.
+*Coming soon - add your skills here!*
 
 ### Development & Code Tools
 
@@ -40,7 +40,7 @@ Each skill is a self-contained folder with instructions, scripts, and resources 
 
 ### Productivity & Organization
 
-*Coming soon - add your skills here!*
+- [**Google Skill (NotebookLM)**](./google-skill/) - Query Google NotebookLM for source-grounded answers from your documents. Includes Gemini integration, browser automation, and library management.
 
 ---
 
