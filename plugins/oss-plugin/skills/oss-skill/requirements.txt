@@ -1,0 +1,2 @@
+oss2==2.18.5
+python-dotenv==1.0.1

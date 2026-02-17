@@ -1,0 +1,9 @@
+{
+  "name": "chrome-fetch-plugin",
+  "description": "Fetch web page content via Chrome DevTools MCP when WebFetch fails (e.g., 'Unable to verify if domain is safe'), when pages require authentication from the user's Chrome session, or when SPAs need JavaScript rendering. Uses the user's running Chrome browser instance with autoConnect.",
+  "version": "1.0.0",
+  "author": {
+    "name": "xiaohui",
+    "email": "talk@xiaohui.cool"
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "meta-plugin",
-  "description": "meta plugin for Claude Code.",
+  "description": "Generate slash commands with semantic versioning, automatic backups, and changelog tracking. Use when the user wants to create, update, or version-manage Claude Code slash commands.",
   "version": "1.0.0",
   "author": {
     "name": "xiaohui",

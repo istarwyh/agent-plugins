@@ -1,0 +1,9 @@
+{
+  "name": "oss-plugin",
+  "description": "Trigger when the user asks to upload, download, list, delete, sync, or generate signed URLs for files on Alibaba Cloud OSS (Object Storage Service). Operates via Python CLI scripts wrapping the oss2 SDK.",
+  "version": "1.0.0",
+  "author": {
+    "name": "xiaohui",
+    "email": "talk@xiaohui.cool"
+  }
+}

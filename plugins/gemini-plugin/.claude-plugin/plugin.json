@@ -1,6 +1,6 @@
 {
   "name": "gemini-plugin",
-  "description": "Interact with Google Gemini for AI-powered conversations, Q&A, and image generation. Includes browser automation and persistent authentication.",
+  "description": "Triggers when user wants to ask Gemini questions, generate text/images via Google Gemini, or mentions 'Gemini'. Provides browser-automated Gemini text generation and image creation with persistent Google authentication.",
   "version": "1.0.0",
   "author": {
     "name": "xiaohui",
