@@ -50,12 +50,6 @@ def generate_image(prompt: str, output_dir: str = ".", headless: bool = False, d
     Returns:
         List of saved image paths
     """
-    auth = AuthManager()
-
-    if not auth.is_authenticated():
-        print("⚠️ Not authenticated. Run: python scripts/run.py auth_manager.py setup")
-        return None
-
     print(f"🎨 Generating image: {prompt}")
 
     playwright = None
@@ -65,14 +59,21 @@ def generate_image(prompt: str, output_dir: str = ".", headless: bool = False, d
         # Start playwright
         playwright = sync_playwright().start()
 
-        # Launch persistent browser context
-        context = BrowserFactory.launch_persistent_context(
+        # Create browser context (CDP first, then fallback)
+        context = BrowserFactory.create_context(
             playwright,
             headless=headless
         )
 
+        # Auth check: skip if using CDP (user's Chrome is already logged in)
+        if not BrowserFactory.is_cdp_mode():
+            auth = AuthManager()
+            if not auth.is_authenticated():
+                print("⚠️ Not authenticated. Run: python scripts/run.py auth_manager.py setup")
+                return None
+
         # Navigate to Gemini - use a new URL to start fresh chat
-        page = context.new_page()
+        page = BrowserFactory.new_page(context)
         print("  🌐 Opening Gemini with new chat...")
         # Add a timestamp to force new chat session
         page.goto("https://gemini.google.com/app", wait_until="domcontentloaded", timeout=PAGE_LOAD_TIMEOUT)
@@ -333,10 +334,7 @@ def generate_image(prompt: str, output_dir: str = ".", headless: bool = False, d
     finally:
         # Always clean up
         if context:
-            try:
-                context.close()
-            except:
-                pass
+            BrowserFactory.cleanup(context)
 
         if playwright:
             try:

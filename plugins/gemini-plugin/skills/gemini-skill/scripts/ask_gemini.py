@@ -53,12 +53,6 @@ def ask_gemini(question: str, headless: bool = True) -> str:
     Returns:
         Answer text from Gemini
     """
-    auth = AuthManager()
-
-    if not auth.is_authenticated():
-        print("⚠️ Not authenticated. Run: python scripts/run.py auth_manager.py setup")
-        return None
-
     print(f"💬 Asking Gemini: {question}")
 
     playwright = None
@@ -68,14 +62,21 @@ def ask_gemini(question: str, headless: bool = True) -> str:
         # Start playwright
         playwright = sync_playwright().start()
 
-        # Launch persistent browser context using factory
-        context = BrowserFactory.launch_persistent_context(
+        # Create browser context (CDP first, then fallback)
+        context = BrowserFactory.create_context(
             playwright,
             headless=headless
         )
 
+        # Auth check: skip if using CDP (user's Chrome is already logged in)
+        if not BrowserFactory.is_cdp_mode():
+            auth = AuthManager()
+            if not auth.is_authenticated():
+                print("⚠️ Not authenticated. Run: python scripts/run.py auth_manager.py setup")
+                return None
+
         # Navigate to Gemini
-        page = context.new_page()
+        page = BrowserFactory.new_page(context)
         print("  🌐 Opening Gemini...")
         page.goto("https://gemini.google.com/app", wait_until="domcontentloaded", timeout=PAGE_LOAD_TIMEOUT)
 
@@ -242,10 +243,7 @@ def ask_gemini(question: str, headless: bool = True) -> str:
     finally:
         # Always clean up
         if context:
-            try:
-                context.close()
-            except:
-                pass
+            BrowserFactory.cleanup(context)
 
         if playwright:
             try:

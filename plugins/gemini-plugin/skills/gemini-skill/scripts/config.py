@@ -38,6 +38,11 @@ BROWSER_ARGS = [
 
 USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
 
+# CDP (Chrome DevTools Protocol) Configuration
+# Default endpoint for connecting to an existing Chrome instance
+# Chrome must be started with: --remote-debugging-port=9222
+CDP_ENDPOINT = "http://localhost:9222"
+
 # Timeouts
 LOGIN_TIMEOUT_MINUTES = 10
 QUERY_TIMEOUT_SECONDS = 120

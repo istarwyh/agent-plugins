@@ -103,8 +103,8 @@ class AuthManager:
         try:
             playwright = sync_playwright().start()
 
-            # Launch using factory
-            context = BrowserFactory.launch_persistent_context(
+            # Auth setup needs its own browser instance (not CDP)
+            context = BrowserFactory.launch_persistent_context_no_cdp(
                 playwright,
                 headless=headless
             )
@@ -249,8 +249,8 @@ class AuthManager:
         try:
             playwright = sync_playwright().start()
 
-            # Launch using factory
-            context = BrowserFactory.launch_persistent_context(
+            # Validation needs its own browser instance (not CDP)
+            context = BrowserFactory.launch_persistent_context_no_cdp(
                 playwright,
                 headless=True
             )

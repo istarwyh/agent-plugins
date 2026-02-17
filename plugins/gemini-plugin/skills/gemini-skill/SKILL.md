@@ -5,7 +5,20 @@ description: 当用户想通过 Google Gemini 生成文本、生成图片、或�
 
 # Gemini AI 技能
 
-通过浏览器自动化与 Google Gemini 交互，支持文本生成和图片创建。每次交互打开新浏览器会话，获取响应后自动关闭。
+通过浏览器自动化与 Google Gemini 交互，支持文本生成和图片创建。
+
+**默认复用已有 Chrome 实例**（通过 CDP 协议连接 `localhost:9222`）。如果 Chrome 未启动或未启用远程调试，自动回退到启动新浏览器实例。
+
+要启用 CDP 复用，Chrome 需以远程调试模式启动：
+```bash
+# macOS
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
+
+# Linux
+google-chrome --remote-debugging-port=9222
+```
+
+复用已有实例时，用户的 Google 登录会话直接可用，无需单独认证。
 
 ## 核心规则：必须使用 run.py
 
@@ -94,10 +107,11 @@ PAGE_LOAD_TIMEOUT=30000
 
 ## 局限性
 
-- 无会话持久性（每次查询 = 新浏览器）
 - 免费 Google 账户有速率限制
 - 图片生成可能需要几分钟
 - 依赖 Gemini 网页界面可用性
+- CDP 模式下 patchright 反检测补丁不生效（连接的是用户自己的 Chrome）
+- 非 CDP 回退模式下无会话持久性（每次查询 = 新浏览器）
 
 ## 参考文档
 
