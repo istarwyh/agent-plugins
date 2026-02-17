@@ -9,14 +9,36 @@ description: 当用户想通过 Google Gemini 生成文本、生成图片、或�
 
 **默认复用已有 Chrome 实例**（通过 CDP 协议连接 `localhost:9222`）。如果 Chrome 未启动或未启用远程调试，自动回退到启动新浏览器实例。
 
-要启用 CDP 复用，Chrome 需以远程调试模式启动：
-```bash
-# macOS
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
+### CDP 模式启动
 
-# Linux
-google-chrome --remote-debugging-port=9222
+Chrome 的 `--remote-debugging-port` 要求使用**非默认** `--user-data-dir`。推荐将默认 profile 复制到独立目录：
+
+```bash
+# CDP profile 路径
+CDP_PROFILE="$HOME/chrome-cdp-profile"
+
+# 如果 CDP profile 不存在，从默认 profile 复制（保留登录状态、扩展、书签）
+if [ ! -d "$CDP_PROFILE" ]; then
+  cp -a "$HOME/Library/Application Support/Google/Chrome" "$CDP_PROFILE"  # macOS
+  # cp -a "$HOME/.config/google-chrome" "$CDP_PROFILE"                   # Linux
+  rm -f "$CDP_PROFILE"/Singleton*  # 清除锁文件
+fi
+
+# 启动 Chrome（macOS）
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+  --remote-debugging-port=9222 \
+  --user-data-dir="$CDP_PROFILE"
+
+# 启动 Chrome（Linux）
+# google-chrome --remote-debugging-port=9222 --user-data-dir="$CDP_PROFILE"
 ```
+
+**Agent 自动处理**：如果用户要求使用 CDP 但 `~/chrome-cdp-profile` 不存在，Agent 应自动执行以下步骤：
+1. 关闭已运行的 Chrome（`killall "Google Chrome"` / `killall chrome`）
+2. 从默认 profile 复制到 `~/chrome-cdp-profile`
+3. 删除锁文件（`Singleton*`）
+4. 用上述命令启动 Chrome
+5. 等待 CDP 端口就绪（`curl -s http://localhost:9222/json/version`）
 
 复用已有实例时，用户的 Google 登录会话直接可用，无需单独认证。
 
@@ -82,7 +104,8 @@ python scripts/run.py auth_manager.py clear    # 清除认证
 ## 决策流程
 
 ```
-用户请求文本/图片 → 检查认证(status) → 未认证则 setup → 执行对应脚本 → 返回结果
+用户请求 → 检查 CDP(curl localhost:9222) → 未就绪则准备 CDP profile 并启动 Chrome → 执行对应脚本 → 返回结果
+         → CDP 不可用时回退：检查认证(status) → 未认证则 setup → 执行脚本
 ```
 
 ## 数据存储
