@@ -8,7 +8,6 @@ Based on NotebookLM ask_question.py implementation
 import argparse
 import sys
 import time
-import re
 from pathlib import Path
 
 from patchright.sync_api import sync_playwright
@@ -18,28 +17,39 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from auth_manager import AuthManager
 from config import PAGE_LOAD_TIMEOUT
-from browser_utils import BrowserFactory, StealthUtils
+from browser_utils import BrowserFactory
 
 
-# Gemini selectors (to be discovered)
+# Input selectors (Gemini uses Quill editor)
 GEMINI_INPUT_SELECTORS = [
-    "rich-textarea[placeholder*='输入']",  # Chinese
-    "rich-textarea[placeholder*='Enter']",  # English
-    "rich-textarea",  # Fallback
-    ".ql-editor[contenteditable='true']",  # Rich text editor
-    "div[contenteditable='true'][role='textbox']",  # Generic contenteditable
+    ".ql-editor.textarea",          # Quill editor (primary, 2025+)
+    "rich-textarea",                 # Legacy rich-textarea element
+    "div[contenteditable='true']",   # Generic contenteditable fallback
 ]
 
 GEMINI_RESPONSE_SELECTORS = [
     ".model-response-text",
-    ".response-container .markdown",
     "message-content",
-    "[data-test-id*='conversation']",
+    ".response-container .markdown",
     ".markdown",
-    "[class*='response']",
-    "[class*='message']",
-    "div[class*='model']",
 ]
+
+
+def _wait_for_input(page, timeout=60):
+    """Poll for input element with JS (more reliable than wait_for_selector for Gemini SPA)."""
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        for selector in GEMINI_INPUT_SELECTORS:
+            try:
+                el = page.query_selector(selector)
+                if el:
+                    box = el.bounding_box()
+                    if box and box['width'] > 50:
+                        return el, selector
+            except:
+                continue
+        time.sleep(2)
+    return None, None
 
 
 def ask_gemini(question: str, headless: bool = True) -> str:
@@ -80,92 +90,38 @@ def ask_gemini(question: str, headless: bool = True) -> str:
         print("  🌐 Opening Gemini...")
         page.goto("https://gemini.google.com/app", wait_until="domcontentloaded", timeout=PAGE_LOAD_TIMEOUT)
 
-        # Wait for page to be ready
-        print("  ⏳ Waiting for page to load...")
-        time.sleep(3)  # Give page time to initialize
-
-        # Debug: Print page content to understand structure
-        if not headless:
-            print("  🔍 Debug mode: Browser window is visible")
-            print("  💡 Inspect the page to find correct selectors")
-
-        # Try to find input field
-        print("  ⏳ Looking for input field...")
-        input_element = None
-
-        for selector in GEMINI_INPUT_SELECTORS:
-            try:
-                print(f"    Trying selector: {selector}")
-                input_element = page.wait_for_selector(
-                    selector,
-                    timeout=10000,
-                    state="visible"
-                )
-                if input_element:
-                    print(f"  ✓ Found input: {selector}")
-                    break
-            except Exception as e:
-                print(f"    ✗ Failed: {e}")
-                continue
+        # Wait for input field (Gemini SPA needs time to initialize)
+        print("  ⏳ Waiting for input field...")
+        input_element, input_selector = _wait_for_input(page, timeout=60)
 
         if not input_element:
             print("  ❌ Could not find input field")
-            print("  💡 Let's try to inspect the page...")
-
-            # Keep browser open for inspection if not headless
             if not headless:
                 print("\n  ⏸️  Browser will stay open for 60 seconds for inspection...")
-                print("  🔍 Please inspect the page and identify the input selector")
                 time.sleep(60)
-
             return None
+
+        print(f"  ✓ Found input: {input_selector}")
 
         # Type question
         print("  ⏳ Typing question...")
-
-        # Store which selector worked
-        working_selector = None
-        for selector in GEMINI_INPUT_SELECTORS:
-            try:
-                test_elem = page.query_selector(selector)
-                if test_elem and test_elem.is_visible():
-                    working_selector = selector
-                    break
-            except:
-                continue
-
-        if not working_selector:
-            print("  ❌ Could not find working selector")
-            return None
-
-        # Try different typing methods
         try:
-            # Method 1: Click and type
             input_element.click()
             time.sleep(0.5)
-            input_element.type(question, delay=50)  # Type with delay
-        except Exception as e:
-            print(f"  ⚠️ Typing method 1 failed: {e}")
-            try:
-                # Method 2: Fill
-                input_element.fill(question)
-            except Exception as e2:
-                print(f"  ⚠️ Typing method 2 failed: {e2}")
-                # Method 3: JavaScript with safe parameter passing
+
+            if len(question) > 100:
                 try:
-                    page.evaluate("""
-                        (selector, text) => {
-                            const elem = document.querySelector(selector);
-                            if (elem) {
-                                elem.value = text;
-                                elem.dispatchEvent(new Event('input', { bubbles: true }));
-                                elem.dispatchEvent(new Event('change', { bubbles: true }));
-                            }
-                        }
-                    """, working_selector, question)
-                except Exception as e3:
-                    print(f"  ⚠️ All typing methods failed: {e3}")
-                    return None
+                    input_element.fill(question)
+                except Exception:
+                    input_element.type(question, delay=10)
+            else:
+                page.keyboard.type(question, delay=20)
+
+            time.sleep(1)
+            print(f"  ✓ Typed: {question[:50]}..." if len(question) > 50 else f"  ✓ Typed: {question}")
+        except Exception as e:
+            print(f"  ❌ Typing failed: {e}")
+            return None
 
         # Submit
         print("  📤 Submitting...")
