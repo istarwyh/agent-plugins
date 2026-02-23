@@ -61,7 +61,8 @@ def _wait_for_input(page, timeout=60):
 
 
 def _find_generated_images(page):
-    """Find generated images on the page, excluding icons/SVGs/small images."""
+    """Find generated images on the page, excluding icons/SVGs/small images/avatars."""
+    import re
     for selector in IMAGE_RESULT_SELECTORS:
         try:
             elements = page.query_selector_all(selector)
@@ -69,11 +70,25 @@ def _find_generated_images(page):
             for img in elements:
                 src = img.get_attribute('src') or ''
                 cls = img.get_attribute('class') or ''
-                # Skip SVGs, icons, tiny images
+                # Skip SVGs, icons
                 if src.endswith('.svg') or 'icon' in cls.lower():
                     continue
                 if 'googleusercontent.com' not in src:
                     continue
+                # Skip small images (avatars, profile pics): =s32, =s48, =s64 etc.
+                size_match = re.search(r'=s(\d+)', src)
+                if size_match and int(size_match.group(1)) < 200:
+                    continue
+                # Skip avatar-style URLs (contain /ogw/ path)
+                if '/ogw/' in src or '/a/' in src.split('googleusercontent.com')[-1][:10]:
+                    continue
+                # Check rendered size via bounding box
+                try:
+                    box = img.bounding_box()
+                    if box and (box['width'] < 100 or box['height'] < 100):
+                        continue
+                except:
+                    pass
                 loaded.append(img)
             if loaded:
                 return loaded, selector
@@ -307,16 +322,32 @@ def generate_image(prompt: str, output_dir: str = ".", headless: bool = False, d
                         print(f"    ❌ Fallback also failed: {fallback_error}")
                     continue
         else:
-            # No generated-image wrappers, save found images via screenshot
-            print("  ⚠️ No download button available, saving via screenshot")
+            # No generated-image wrappers, download images via src URL
+            print("  ⚠️ No download button available, downloading via src URL")
             for i, img in enumerate(images_found):
                 try:
-                    screenshot_path = output_path / f"gemini_image_{i+1}_{int(time.time())}.png"
-                    img.screenshot(path=str(screenshot_path))
-                    saved_paths.append(str(screenshot_path))
-                    print(f"    ✓ Saved (screenshot): {screenshot_path}")
+                    src = img.get_attribute('src') or ''
+                    if src and 'googleusercontent.com' in src:
+                        # Use page.request to download (carries cookies/session)
+                        response = page.request.get(src)
+                        if response.ok:
+                            file_path = output_path / f"gemini_image_{i+1}_{int(time.time())}.png"
+                            file_path.write_bytes(response.body())
+                            saved_paths.append(str(file_path))
+                            print(f"    ✓ Downloaded via URL: {file_path}")
+                        else:
+                            raise Exception(f"HTTP {response.status}")
+                    else:
+                        raise Exception(f"No valid src URL: {src[:80]}")
                 except Exception as e:
-                    print(f"    ❌ Screenshot failed for image {i+1}: {e}")
+                    print(f"    ⚠️ URL download failed for image {i+1}: {e}, trying screenshot...")
+                    try:
+                        screenshot_path = output_path / f"gemini_image_{i+1}_{int(time.time())}.png"
+                        img.screenshot(path=str(screenshot_path))
+                        saved_paths.append(str(screenshot_path))
+                        print(f"    ✓ Saved (screenshot): {screenshot_path}")
+                    except Exception as e2:
+                        print(f"    ❌ Screenshot also failed: {e2}")
 
         if saved_paths:
             print(f"\n  ✅ Successfully downloaded {len(saved_paths)} images!")
