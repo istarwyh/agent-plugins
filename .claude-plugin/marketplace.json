@@ -24,7 +24,7 @@
       "name": "meta-plugin",
       "description": "Generate slash commands with semantic versioning, automatic backups, and changelog tracking. Use when the user wants to create, update, or version-manage Claude Code slash commands.",
       "source": "./plugins/meta-plugin",
-      "category": "productivity-organization"
+      "category": "meta"
     },
     {
       "name": "chrome-fetch-plugin",
@@ -37,6 +37,12 @@
       "description": "Trigger when the user asks to upload, download, list, delete, sync, or generate signed URLs for files on Alibaba Cloud OSS (Object Storage Service). Operates via Python CLI scripts wrapping the oss2 SDK.",
       "source": "./plugins/oss-plugin",
       "category": "productivity-organization"
-    }
+    },
+    {
+  "name": "xiaohongshu-plugin",
+  "description": "Automate Xiaohongshu (小红书) via Chrome DevTools MCP. Triggered when the user wants to open, log in, browse, search, or interact with Xiaohongshu/小红书. Supports login (QR code or phone number), browsing the feed, searching content, viewing post details, and reading user profiles.",
+      "source": "./plugins/xiaohongshu-plugin",
+      "category": "productivity-organization"
+}
   ]
 }
