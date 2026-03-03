@@ -12,6 +12,63 @@ Automate interactions with Xiaohongshu web version via Chrome DevTools MCP tools
 - Chrome DevTools MCP server connected (`chrome-devtools-mcp`)
 - Chrome browser running with remote debugging enabled
 
+## Step 0: Ensure Chrome is Running with Remote Debugging
+
+**This step is CRITICAL and must be done FIRST before any MCP tool calls.** Chrome 145+ requires `--user-data-dir` to be a non-default path for remote debugging to work — even on ARM-native builds. The default path (`~/Library/Application Support/Google/Chrome`) is always rejected.
+
+### Quick Check
+
+Run this Bash command first to see if Chrome debugging is already available:
+
+```bash
+curl -s http://127.0.0.1:9222/json/version 2>&1 | head -3
+```
+
+If it returns a JSON with `"Browser"`, Chrome is ready — skip to Step 1.
+
+### If Chrome is NOT ready, run the automated setup:
+
+```bash
+# 1. Kill existing Chrome
+killall -9 "Google Chrome" 2>/dev/null
+sleep 4
+
+# 2. Create a symlinked user-data-dir that reuses the original profile
+#    This preserves all cookies, extensions, and login sessions
+#    while satisfying Chrome's "non-default directory" requirement.
+ORIGINAL_DIR="$HOME/Library/Application Support/Google/Chrome"
+LINKED_DIR="/tmp/chrome-linked-profile"
+rm -rf "$LINKED_DIR"
+mkdir -p "$LINKED_DIR"
+ls "$ORIGINAL_DIR" | while read item; do
+  ln -s "$ORIGINAL_DIR/$item" "$LINKED_DIR/$item" 2>/dev/null
+done
+
+# 3. Launch Chrome with remote debugging using the symlinked dir
+arch -arm64 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+  --remote-debugging-port=9222 \
+  --user-data-dir="$LINKED_DIR" 2>/dev/null &
+
+# 4. Wait and verify
+sleep 6
+curl -s http://127.0.0.1:9222/json/version | head -3
+```
+
+### Why this works
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| `DevTools remote debugging requires a non-default data directory` | Chrome 145+ refuses to enable debugging on the default profile path | Use `--user-data-dir` pointing to a different path |
+| New profile loses cookies/extensions/login | Using a fresh `--user-data-dir` creates an empty profile | Symlink all contents from the original Chrome directory into the new path |
+| `Could not find DevToolsActivePort` | MCP plugin looks for this file, but Chrome didn't create it | Ensure `--user-data-dir` is set (this is what triggers the file creation at the non-default path) |
+| Rosetta warning on ARM Mac | x86 Chrome binary running via Rosetta | Use `arch -arm64` to force ARM execution, or install ARM-native Chrome |
+
+### Important notes
+
+- You MUST kill ALL Chrome processes before restarting — leftover processes lock the profile directory.
+- After restarting Chrome, the MCP `chrome-devtools-mcp` server may need to reconnect. If MCP tools fail, try `list_pages` first to trigger reconnection.
+- The symlinked profile dir must be recreated each session since `/tmp` is cleared on reboot.
+
 ## Workflow
 
 ### 1. Open Xiaohongshu
@@ -205,6 +262,11 @@ After publishing, the URL will change to include `published=true` and the page r
 
 | Issue | Solution |
 |-------|----------|
+| MCP tools return "No such tool available" | Chrome was restarted but MCP server lost connection. Try calling `list_pages` to trigger reconnection. If that also fails, the MCP server process itself may need restart (outside of this skill's scope). |
+| `DevToolsActivePort` not found | Chrome is not running with `--user-data-dir`. Follow Step 0 to restart Chrome properly. |
+| Chrome debugging port not listening | Run Step 0 setup. Make sure ALL Chrome processes are killed first (`killall -9 "Google Chrome"`), wait 4 seconds, then restart. |
+| `open -a Chrome --args` ignores flags | macOS `open -a` may drop `--args` flags. Always use the binary path directly: `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --remote-debugging-port=9222 ...` |
+| Lost login/cookies after Chrome restart | You used a fresh `--user-data-dir` without symlinks. Follow Step 0's symlink approach to preserve the original profile. |
 | Navigation timeout | Check `list_pages` — the page may have loaded despite the timeout |
 | QR code expired | Refresh the page or click to regenerate the QR code |
 | Login modal not appearing | Try clicking the "登录" text in the sidebar |
