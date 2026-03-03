@@ -16,43 +16,15 @@ Automate interactions with Xiaohongshu web version via Chrome DevTools MCP tools
 
 **This step is CRITICAL and must be done FIRST before any MCP tool calls.** Chrome 145+ requires `--user-data-dir` to be a non-default path for remote debugging to work — even on ARM-native builds. The default path (`~/Library/Application Support/Google/Chrome`) is always rejected.
 
-### Quick Check
+### One-command setup
 
-Run this Bash command first to see if Chrome debugging is already available:
-
-```bash
-curl -s http://127.0.0.1:9222/json/version 2>&1 | head -3
-```
-
-If it returns a JSON with `"Browser"`, Chrome is ready — skip to Step 1.
-
-### If Chrome is NOT ready, run the automated setup:
+Run the bundled script — it checks if Chrome is already ready, and if not, handles the full kill → symlink → launch → verify flow automatically:
 
 ```bash
-# 1. Kill existing Chrome
-killall -9 "Google Chrome" 2>/dev/null
-sleep 4
-
-# 2. Create a symlinked user-data-dir that reuses the original profile
-#    This preserves all cookies, extensions, and login sessions
-#    while satisfying Chrome's "non-default directory" requirement.
-ORIGINAL_DIR="$HOME/Library/Application Support/Google/Chrome"
-LINKED_DIR="/tmp/chrome-linked-profile"
-rm -rf "$LINKED_DIR"
-mkdir -p "$LINKED_DIR"
-ls "$ORIGINAL_DIR" | while read item; do
-  ln -s "$ORIGINAL_DIR/$item" "$LINKED_DIR/$item" 2>/dev/null
-done
-
-# 3. Launch Chrome with remote debugging using the symlinked dir
-arch -arm64 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
-  --remote-debugging-port=9222 \
-  --user-data-dir="$LINKED_DIR" 2>/dev/null &
-
-# 4. Wait and verify
-sleep 6
-curl -s http://127.0.0.1:9222/json/version | head -3
+bash /path/to/xiaohongshu-plugin/scripts/ensure-chrome-debug.sh
 ```
+
+The script path is relative to this plugin's installation directory. Use the actual resolved path when calling it.
 
 ### Why this works
 
