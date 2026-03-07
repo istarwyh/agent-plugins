@@ -143,8 +143,36 @@ AI会：
 
 ## MCP Tools
 
+### Screenshot Best Practices
+
+**重要**：使用截图工具时遵循以下原则以避免文件过大：
+
+1. **优先使用文本快照**：`take_snapshot`（文本）优于 `take_screenshot`（图片）
+2. **必须截图时的设置**：
+   - 使用 `filePath` 保存到磁盘（如 `/tmp/screenshot.png`）
+   - 格式：`jpeg`，质量：`50`
+   - 针对特定元素：使用 `uid` 参数而非全页面
+3. **查看截图**：使用 `Read` 工具查看保存的文件，不要内联到上下文
+
+示例：
+```javascript
+// ✅ 正确：保存到文件
+mcp1_take_screenshot({
+  filePath: "/tmp/screenshot.png",
+  format: "jpeg",
+  quality: 50,
+  uid: "specific-element-uid"
+})
+
+// ❌ 错误：直接返回图片数据（可能超过20MB）
+mcp1_take_screenshot({ fullPage: true })
+```
+
+### Available Tools
+
 - `chrome-devtools:mcp1_navigate_page`
 - `chrome-devtools:mcp1_take_screenshot`
+- `chrome-devtools:mcp1_take_snapshot`（推荐）
 - `chrome-devtools:mcp1_evaluate_script`
 
 ## Resources

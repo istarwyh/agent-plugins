@@ -86,11 +86,12 @@ if (textImageBtn) {
 ### 第五步：填充内容
 
 **重要**：
-- 内容必须 ≤ 500 字符
-- 保留换行格式（使用 `<p>` 标签）
+- 单张卡片内容建议 ≤ 200 字符（文字过多会导致图片挤压、换行丢失）
+- 总内容 ≤ 500 字符，超过 200 字时拆分为多张卡片
+- 使用剪贴板粘贴（ClipboardEvent）替代 innerHTML，确保 tiptap 编辑器正确识别段落换行
 - 支持 emoji 和话题标签
 
-**执行操作**：
+**方案A：单张卡片（内容 ≤ 200 字）**：
 ```javascript
 // 使用 chrome-devtools:mcp1_evaluate_script
 const editor = document.querySelector('.tiptap.ProseMirror');
@@ -102,23 +103,90 @@ const content = `你的内容
 支持话题 #标签`;
 
 editor.focus();
-editor.innerHTML = '';
 
-// 按行创建段落
+// 选中并清除现有内容
+document.execCommand('selectAll');
+document.execCommand('delete');
+
+// 将纯文本转为 HTML 段落
 const lines = content.split('\n');
-lines.forEach(line => {
-  const p = document.createElement('p');
-  p.textContent = line || '\u200B'; // 空行用零宽字符
-  editor.appendChild(p);
-});
+const htmlContent = lines.map(line =>
+  `<p>${line || '<br>'}</p>`
+).join('');
 
-editor.dispatchEvent(new Event('input', { bubbles: true }));
-editor.dispatchEvent(new Event('change', { bubbles: true }));
+// 通过 ClipboardEvent 粘贴，让 tiptap 原生解析 HTML 段落
+// 比直接操作 innerHTML 更可靠，能正确保留换行
+const dt = new DataTransfer();
+dt.setData('text/html', htmlContent);
+dt.setData('text/plain', content);
+const pasteEvent = new ClipboardEvent('paste', {
+  bubbles: true,
+  cancelable: true,
+  clipboardData: dt
+});
+editor.dispatchEvent(pasteEvent);
 
 return { success: true, contentLength: content.length };
 ```
 
-**验证**：使用 `chrome-devtools:mcp1_take_screenshot` 确认内容已填充
+**方案B：多张卡片（内容 > 200 字，推荐）**：
+
+将内容按逻辑分段，每张卡片 ≤ 200 字，图片排版更清晰美观。
+
+```javascript
+// 使用 chrome-devtools:mcp1_evaluate_script
+// 第一张卡片：填入第一段内容
+const editor = document.querySelector('.tiptap.ProseMirror');
+if (!editor) return { success: false };
+
+const card1Content = `第一段内容（开头 + 核心信息）
+控制在200字以内
+排版更清晰`;
+
+editor.focus();
+document.execCommand('selectAll');
+document.execCommand('delete');
+
+const lines = card1Content.split('\n');
+const htmlContent = lines.map(line =>
+  `<p>${line || '<br>'}</p>`
+).join('');
+
+const dt = new DataTransfer();
+dt.setData('text/html', htmlContent);
+dt.setData('text/plain', card1Content);
+editor.dispatchEvent(new ClipboardEvent('paste', {
+  bubbles: true,
+  cancelable: true,
+  clipboardData: dt
+}));
+
+return { success: true, card: 1, contentLength: card1Content.length };
+```
+
+然后点击"再写一张"按钮添加后续卡片：
+```javascript
+// 使用 chrome-devtools:mcp1_evaluate_script
+const addBtn = Array.from(document.querySelectorAll('*'))
+  .find(el => el.textContent?.trim() === '再写一张');
+if (addBtn) {
+  addBtn.click();
+  return { clicked: true };
+}
+```
+
+在新卡片编辑器中填入第二段内容，重复上述粘贴流程。
+
+**为什么用 ClipboardEvent 而不是 innerHTML？**
+- tiptap (ProseMirror) 编辑器通过内部事务管理文档状态
+- 直接修改 innerHTML 绕过了 tiptap 的状态管理，导致：
+  - 生成图片时换行丢失，内容挤成一段
+  - 发布编辑页正文预览中段落信息丢失
+- ClipboardEvent 触发 tiptap 的原生粘贴处理器，正确解析 `<p>` 标签为独立段落
+
+**验证**：使用 `chrome-devtools:mcp1_take_screenshot` 确认：
+1. 编辑器中内容分段显示（非连续文本）
+2. 每段之间有明确换行
 
 ### 第六步：生成图片
 
@@ -140,6 +208,108 @@ if (generateBtn) {
 ```
 
 **预期结果**：页面跳转到"预览图片"界面，显示生成的图片卡片
+
+#### 图片质量检查与优化
+
+**重要**：生成图片后必须检查质量，如果图片丑陋需要优化
+
+1. **检查图片质量**
+```javascript
+// 使用 chrome-devtools:mcp1_evaluate_script
+// 等待图片加载完成
+await new Promise(resolve => setTimeout(resolve, 3000));
+
+// 检查图片是否生成成功
+const imageElements = document.querySelectorAll('img[src*="generated"], img[src*="ai-image"]');
+const hasValidImage = imageElements.length > 0 && 
+                     imageElements[0].complete && 
+                     imageElements[0].naturalWidth > 0;
+
+if (!hasValidImage) {
+  return { success: false, reason: '图片生成失败或未加载' };
+}
+
+// 检查图片质量指标
+const img = imageElements[0];
+const qualityIssues = [];
+
+// 检查分辨率
+if (img.naturalWidth < 800 || img.naturalHeight < 800) {
+  qualityIssues.push('分辨率过低');
+}
+
+// 检查是否为纯色或简单图案
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+canvas.width = 50;
+canvas.height = 50;
+ctx.drawImage(img, 0, 0, 50, 50);
+const imageData = ctx.getImageData(0, 0, 50, 50);
+const uniqueColors = new Set();
+for (let i = 0; i < imageData.data.length; i += 4) {
+  const rgb = `${imageData.data[i]},${imageData.data[i+1]},${imageData.data[i+2]}`;
+  uniqueColors.add(rgb);
+}
+if (uniqueColors.size < 10) {
+  qualityIssues.push('图片过于简单，色彩单一');
+}
+
+return { 
+  success: true, 
+  qualityIssues,
+  imageInfo: {
+    width: img.naturalWidth,
+    height: img.naturalHeight,
+    colorVariety: uniqueColors.size
+  }
+};
+```
+
+2. **如果图片质量差，尝试优化**
+```javascript
+// 使用 chrome-devtools:mcp1_evaluate_script
+// 方法1: 重新生成
+const regenerateBtn = Array.from(document.querySelectorAll('*'))
+  .find(el => el.textContent?.includes('重新生成') || el.textContent?.includes('换一批'));
+if (regenerateBtn) {
+  regenerateBtn.click();
+  return { action: 'regenerating' };
+}
+
+// 方法2: 调整内容后重新生成
+// 返回上一步修改内容
+const backBtn = Array.from(document.querySelectorAll('*'))
+  .find(el => el.textContent?.includes('上一步') || el.textContent?.includes('返回'));
+if (backBtn) {
+  backBtn.click();
+  return { action: 'back_to_edit', suggestion: '增加更多描述性文字、emoji或话题标签' };
+}
+
+// 方法3: 手动优化建议
+return { 
+  action: 'manual_optimization_needed',
+  suggestions: [
+    '增加更多描述性文字，让AI生成更丰富的图片',
+    '添加相关的emoji符号',
+    '使用更具体的话题标签',
+    '调整文字结构，使用分点描述'
+  ]
+};
+```
+
+3. **图片美化技巧**
+如果多次生成仍不满意，尝试以下内容优化：
+
+- **增加感官描述**：添加颜色、形状、风格等词汇
+- **使用情感词汇**：温馨、清新、高级感等
+- **添加场景元素**：咖啡、书本、植物等背景
+- **指定风格**：简约、ins风、复古等
+
+**示例优化**：
+```
+原内容：今天分享3个护肤技巧
+优化后：分享3个让肌肤焕发光彩的护肤技巧 ✨ 温馨的卧室场景，ins风格
+```
 
 ### 第七步：进入发布编辑页面
 
@@ -167,19 +337,24 @@ if (nextBtn) {
 **执行操作**：
 ```javascript
 // 使用 chrome-devtools:mcp1_evaluate_script
-const titleInput = document.querySelector('input[placeholder*="标题"]') || 
+// 注意：小红书使用 React，直接设置 .value 不会触发状态更新
+// 必须使用 nativeInputValueSetter 绕过 React 的合成事件
+const titleInput = document.querySelector('input[placeholder*="标题"]') ||
                    document.querySelectorAll('input[type="text"]')[0];
 
 if (titleInput) {
   titleInput.focus();
-  titleInput.value = '你的标题（≤20字）';
+  const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+    window.HTMLInputElement.prototype, 'value'
+  ).set;
+  nativeInputValueSetter.call(titleInput, '你的标题（≤20字）');
   titleInput.dispatchEvent(new Event('input', { bubbles: true }));
   titleInput.dispatchEvent(new Event('change', { bubbles: true }));
   return { titleFilled: true, title: titleInput.value };
 }
 ```
 
-**验证**：确认标题字数显示正常（不超过20字）
+**验证**：确认标题字数计数器显示正确数字（而非 0/20），且不超过20字
 
 ### 第九步：发布
 
@@ -197,21 +372,28 @@ if (publishBtn) {
 ```
 
 **预期结果**：
-- 页面显示"发布成功"提示（绿色对勾）
-- URL 包含 `published=true` 参数
-- 5秒后自动跳转到笔记页面
+- URL 跳转为包含 `published=true` 参数的新页面
+- 页面回到创作中心首页（上传视频/图文界面）
+- 注意：平台不显示"发布成功"文字提示，以 URL 变化为准
 
 ### 第十步：验证发布成功
 
 **执行操作**：
 ```javascript
 // 使用 chrome-devtools:mcp1_evaluate_script
+// 注意：不要 wait_for "发布成功" 文字，平台不显示该文本
+// 发布成功的标志是 URL 包含 published=true
 const url = window.location.href;
+const published = url.includes('published=true');
 return {
-  published: url.includes('published=true'),
-  currentUrl: url
+  published,
+  currentUrl: url,
+  tip: published ? '发布成功' : '可能仍在处理中，等待几秒后重新检查 URL'
 };
 ```
+
+**备用验证**：如果 URL 检测不到 `published=true`，等待 5 秒后重试，
+或使用 `chrome-devtools:mcp1_take_snapshot` 检查页面是否回到创作中心首页。
 
 ## 内容质量检查（发布前必做）
 
