@@ -44,9 +44,12 @@ else
 fi
 
 # Launch Chrome
+# Note: --remote-allow-origins=* is required to allow WebSocket connections from external tools.
+# Without this flag, Chrome will reject WebSocket handshakes with HTTP 403 Forbidden.
 arch -arm64 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
   --remote-debugging-port=$PORT \
-  --user-data-dir="$LINKED_DIR" 2>/dev/null &
+  --user-data-dir="$LINKED_DIR" \
+  --remote-allow-origins=* 2>/dev/null &
 
 # Wait for Chrome to be ready (up to 15 seconds)
 for i in $(seq 1 15); do

@@ -1,250 +1,163 @@
 ---
-name: xiaohongshu-skill
-description: Open, log in, browse, search, publish posts, and interact with Xiaohongshu (小红书) using Chrome DevTools MCP. Handles login flow, feed browsing, content search, post viewing, and content publishing.
+name: publishing-xiaohongshu
+description: Creates and publishes high-quality posts to Xiaohongshu (小红书/Little Red Book) with content strategy, aesthetics, and platform best practices. Uses AI Agent + Chrome DevTools MCP for reliable publishing. Use when user wants to publish to Xiaohongshu, 小红书, Little Red Book, or needs help creating engaging Chinese social media content.
 ---
 
-# Xiaohongshu (小红书) Browser Automation
+# Publishing to Xiaohongshu
 
-Automate interactions with Xiaohongshu web version via Chrome DevTools MCP tools.
+创作并发布高质量的小红书笔记。
 
-## Prerequisites
+**核心价值**：内容策略 + 美学排版 + 可靠发布
 
-- Chrome DevTools MCP server connected (`chrome-devtools-mcp`)
-- Chrome browser running with remote debugging enabled
+## Quick Start
 
-## Step 0: Ensure Chrome is Running with Remote Debugging
+### Prerequisites
 
-**This step is CRITICAL and must be done FIRST before any MCP tool calls.** Chrome 145+ requires `--user-data-dir` to be a non-default path for remote debugging to work — even on ARM-native builds. The default path (`~/Library/Application Support/Google/Chrome`) is always rejected.
+- Chrome 145+ browser
+- Chrome DevTools MCP configured
+- Xiaohongshu account (logged in)
 
-### One-command setup
-
-Run the bundled script — it checks if Chrome is already ready, and if not, handles the full kill → symlink → launch → verify flow automatically:
+### Setup
 
 ```bash
 bash /path/to/xiaohongshu-plugin/scripts/ensure-chrome-debug.sh
 ```
 
-The script path is relative to this plugin's installation directory. Use the actual resolved path when calling it.
+### Create and publish
 
-### Why this works
-
-| Problem | Cause | Solution |
-|---------|-------|----------|
-| `DevTools remote debugging requires a non-default data directory` | Chrome 145+ refuses to enable debugging on the default profile path | Use `--user-data-dir` pointing to a different path |
-| New profile loses cookies/extensions/login | Using a fresh `--user-data-dir` creates an empty profile | Symlink all contents from the original Chrome directory into the new path |
-| `Could not find DevToolsActivePort` | MCP plugin looks for this file, but Chrome didn't create it | Ensure `--user-data-dir` is set (this is what triggers the file creation at the non-default path) |
-| Rosetta warning on ARM Mac | x86 Chrome binary running via Rosetta | Use `arch -arm64` to force ARM execution, or install ARM-native Chrome |
-
-### Important notes
-
-- You MUST kill ALL Chrome processes before restarting — leftover processes lock the profile directory.
-- After restarting Chrome, the MCP `chrome-devtools-mcp` server may need to reconnect. If MCP tools fail, try `list_pages` first to trigger reconnection.
-- The symlinked profile dir must be recreated each session since `/tmp` is cleared on reboot.
-
-## Workflow
-
-### 1. Open Xiaohongshu
+请AI帮你创作并发布：
 
 ```
-new_page(url: "https://www.xiaohongshu.com")
+请帮我创作一篇关于[主题]的小红书笔记，
+面向[目标人群]，风格[风格描述]
 ```
 
-If navigation times out, use `list_pages` to check if the page loaded anyway, then `select_page` to select it.
+AI会：
+1. 根据内容指南创作标题和正文
+2. 优化排版和emoji使用
+3. 选择精准话题标签
+4. 自动发布到小红书
+5. 验证发布成功
 
-### 2. Check Login Status
+## Content Creation Principles
 
-Take a snapshot and check for login indicators:
-- **Not logged in**: Left sidebar shows "登录" button, no "我" menu item
-- **Logged in**: Left sidebar shows "我" menu item with user avatar
+### Title Strategy (≤20字)
 
-### 3. Login Flow
+**吸引力公式**：数字 + 痛点/好处 + emoji
 
-If not logged in, click the "登录" button. A modal will appear with two options:
+好的标题：
+- ✅ "3个技巧让你的照片更高级 📸"
+- ✅ "终于找到了！平价好用的护肤品 💕"
+- ✅ "新手必看｜5分钟学会化妆 ✨"
 
-#### Option A: QR Code Login (Recommended)
-1. Take a screenshot so the user can see the QR code
-2. Ask the user to scan the QR code with their Xiaohongshu App or WeChat
-3. Wait for the user to confirm they've scanned
-4. Take a screenshot to verify login success
-5. If QR code expires, click to refresh it
+避免：
+- ❌ "分享一下我的日常"（太平淡）
+- ❌ "今天天气真好"（无价值点）
 
-#### Option B: Phone Number Login
-1. Click the phone number input field ("+86 输入手机号")
-2. Fill in the user's phone number using `fill(uid, value)`
-3. Click "获取验证码" button
-4. Ask the user for the verification code
-5. Fill in the verification code
-6. Click "登录" button
+### Content Structure (≤500字)
 
-### 4. Browse Feed
-
-After login, the home feed (`/explore`) shows recommended content cards. Each card contains:
-- Post thumbnail image (click to open)
-- Post title
-- Author name and link
-- Like count
-
-Use `take_snapshot()` to get the current feed content.
-
-### 5. Search Content
-
-1. Click the search box at the top (textbox "搜索小红书")
-2. Type search query using `fill(uid, query)`
-3. Press Enter or click search
-4. Parse search results from the snapshot
-
-### 6. View Post Details
-
-1. Click on a post link from the feed or search results
-2. Wait for the post page to load
-3. Take a snapshot to extract:
-   - Post title and content text
-   - Images/videos
-   - Author info
-   - Like, collect, comment counts
-   - Comments section
-
-### 7. Publish a Post (写文字模式)
-
-The creator center is at `https://creator.xiaohongshu.com/publish/publish`. There are multiple publish modes: 上传视频 (Upload Video), 上传图文 (Upload Image+Text), 写文字 (Write Text), 写长文 (Write Long Article).
-
-The "写文字" mode creates text-based image cards — ideal for text-heavy posts without needing to prepare images.
-
-#### Step 1: Navigate to Creator Center
-
-Click the "发布" link in the left sidebar on the main site. This opens the creator center in a **new tab**.
-
+**黄金结构**：
 ```
-click(uid_of_发布_link)
-list_pages()          # Find the new creator tab
-select_page(pageId)   # Switch to it
+【开头】吸引注意（1-2行）
+    ↓
+【主体】核心内容（分点呈现）
+    ↓
+【结尾】互动引导（话题标签）
 ```
 
-**Important**: The "发布" link opens `creator.xiaohongshu.com` in a new tab. You must use `list_pages` + `select_page` to switch to it.
+**开头技巧**：
+- 痛点共鸣："姐妹们！是不是也有这个困扰？"
+- 惊喜发现："终于找到了！这个宝藏店铺..."
+- 直接价值："今天分享3个超实用的技巧"
 
-#### Step 2: Enter Text Content
-
-1. Take a snapshot to find the textbox element in the "写文字" editor
-2. Click the textbox to focus it
-3. Use `type_text` to input the post content
-
+**主体分点**：
 ```
-click(uid_of_textbox)
-type_text(text: "Your post content here...")
-```
+✨ 第一点：XXX
+• 具体说明
+• 实际案例
 
-**Note**: The text card editor splits long content across multiple pages automatically. Each page becomes a separate image card.
-
-#### Step 3: Generate Images
-
-Click "生成图片" (Generate Images) to convert text into image cards.
-
-```
-click(uid_of_生成图片)
+✨ 第二点：XXX
+...
 ```
 
-Wait for image generation to complete — look for "下一步" (Next Step) button and card style options.
-
-#### Step 4: Choose Card Style
-
-The editor offers multiple card styles: 基础, 插图, 备忘, 边框, 涂鸦, 清新, 涂写, 便签, 光影, 简约.
-
-1. Click on a style name to preview it
-2. Click "下一步" (Next Step) to proceed
-
+**结尾互动**：
 ```
-click(uid_of_style)    # e.g., 简约
-click(uid_of_下一步)
+💬 你们有什么好方法吗？评论区见！
+❤️ 觉得有用记得点赞收藏哦
+
+#话题1 #话题2 #话题3
 ```
 
-#### Step 5: Fill in Title and Description
+### Formatting Aesthetics
 
-After clicking "下一步", the full publish form appears with:
+**换行原则**：
+- 每1-2句话换行
+- 分点内容必须换行
+- 段落间空一行
 
-- **Title field**: textbox with placeholder "填写标题会有更多赞哦" — fill using `fill(uid, title)`
-- **Description field**: multiline textbox — already pre-filled with the text content from Step 2
-- **Recommended hashtags**: clickable tag elements like `#小红书科技AMA`, `#开发者模式` etc.
-- **Activity topics**: optional topic tags to join campaigns
+**Emoji使用**：
+- 📌 重点标记
+- ✨ 亮点突出
+- ⚠️ 注意事项
+- 💡 小贴士
+- ❤️ 推荐强调
 
-```
-fill(uid_of_title_textbox, "Your Post Title")
-click(uid_of_hashtag)   # Optional: add a recommended hashtag
-```
+### Hashtag Strategy
 
-#### Step 6: Configure Settings (Optional)
+**3类标签组合**（3-6个）：
+1. 热门话题（1-2个）
+2. 精准定位（2-3个）
+3. 长尾标签（1-2个）
 
-The publish form also has these optional settings:
+## Publishing Workflow
 
-| Setting | Description |
-|---------|-------------|
-| 加入合集 | Add to a collection |
-| 原创声明 | Declare as original content (checkbox) |
-| 添加内容类型声明 | Add content type declaration |
-| 添加地点 | Add location |
-| 选择群聊 | Select group chat to share |
-| 允许合拍 | Allow duets (checked by default) |
-| 允许正文复制 | Allow text copying (checked by default) |
-| 公开可见 | Public visibility (default) |
-| 定时发布 | Schedule publish time (checkbox) |
+**创作流程**：
+1. 理解主题和目标人群
+2. 根据 [CONTENT_GUIDE.md](CONTENT_GUIDE.md) 创作内容
+3. 优化标题、排版、标签
+4. 进行内容质量自检
+5. 发布到小红书
 
-#### Step 7: Publish
+**技术流程**：
+- 使用视觉反馈（截图）
+- 智能决策适应页面变化
+- 详见 [WORKFLOW.md](WORKFLOW.md)
 
-Click the "发布" button to publish the post.
+**性能**：50-70秒/篇，>95%成功率
 
-```
-click(uid_of_发布_button)
-```
+## Content Quality Checklist
 
-After publishing, the URL will change to include `published=true` and the page returns to the upload interface. Verify success by checking:
-- URL contains `published=true`
-- Page shows the upload interface (上传视频/上传图文 tabs)
-
-#### Complete Publish Flow Summary
+发布前检查：
 
 ```
-1. click("发布" link)           → Opens creator center in new tab
-2. list_pages + select_page     → Switch to creator tab
-3. take_snapshot                → Find textbox UID
-4. click(textbox) + type_text   → Input content
-5. click("生成图片")             → Convert to image cards
-6. wait_for("下一步")           → Wait for generation
-7. click(style) + click("下一步") → Choose style, proceed
-8. fill(title_textbox, title)   → Set post title
-9. click(hashtag)               → Add topic tags (optional)
-10. click("发布")                → Publish the post
-11. Verify URL has published=true
+内容质量检查：
+- [ ] 标题是否吸引人？（≤20字）
+- [ ] 开头是否抓住注意力？
+- [ ] 内容是否有实用价值？
+- [ ] 排版是否清晰易读？
+- [ ] emoji使用是否恰当？
+- [ ] 是否有互动引导？
+- [ ] 话题标签是否精准？（3-6个）
+- [ ] 总字数是否≤500字？
 ```
 
-### 8. View User Profile
+## MCP Tools
 
-1. Click on a user's name link
-2. Wait for profile page to load
-3. Extract: username, bio, follower/following counts, post list
+- `chrome-devtools:mcp1_navigate_page`
+- `chrome-devtools:mcp1_take_screenshot`
+- `chrome-devtools:mcp1_evaluate_script`
 
-## Key Details
+## Resources
 
-- **URL Pattern**: `https://www.xiaohongshu.com/explore` (home feed), `https://www.xiaohongshu.com/explore/{post_id}` (post detail), `https://creator.xiaohongshu.com/publish/publish` (creator center)
-- **Login persistence**: The user's browser cookies/session are available, so login may persist across sessions
-- **Rate limiting**: Be mindful of request frequency; add reasonable pauses between rapid interactions
-- **Dynamic content**: The feed uses infinite scroll; scroll down with `evaluate_script` to load more content
-- **Popups**: After login, promotional popups may appear; close them by clicking the X button or pressing Escape
-- **QR code expiration**: QR codes expire after a short period; if login fails, refresh and retry
+- **[CONTENT_GUIDE.md](CONTENT_GUIDE.md)** - 内容创作指南（美学、运营、技巧）
+- **[WORKFLOW.md](WORKFLOW.md)** - 技术发布流程（10步SOP）
 
-## Common Issues
+## Notes
 
-| Issue | Solution |
-|-------|----------|
-| MCP tools return "No such tool available" | Chrome was restarted but MCP server lost connection. Try calling `list_pages` to trigger reconnection. If that also fails, the MCP server process itself may need restart (outside of this skill's scope). |
-| `DevToolsActivePort` not found | Chrome is not running with `--user-data-dir`. Follow Step 0 to restart Chrome properly. |
-| Chrome debugging port not listening | Run Step 0 setup. Make sure ALL Chrome processes are killed first (`killall -9 "Google Chrome"`), wait 4 seconds, then restart. |
-| `open -a Chrome --args` ignores flags | macOS `open -a` may drop `--args` flags. Always use the binary path directly: `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --remote-debugging-port=9222 ...` |
-| Lost login/cookies after Chrome restart | You used a fresh `--user-data-dir` without symlinks. Follow Step 0's symlink approach to preserve the original profile. |
-| Navigation timeout | Check `list_pages` — the page may have loaded despite the timeout |
-| QR code expired | Refresh the page or click to regenerate the QR code |
-| Login modal not appearing | Try clicking the "登录" text in the sidebar |
-| Content not loading | The page may use lazy loading; scroll down with `evaluate_script(() => window.scrollBy(0, 500))` |
-| Element not interactive | Wait briefly and retry, or take a new snapshot to get updated UIDs |
-| Creator center opens in new tab | Use `list_pages` to find the tab, then `select_page` to switch to it |
-| Text card content reversed | This is a known rendering quirk in the text card editor; the final published images display correctly |
-| "发布" button not responding | Ensure the title field is filled — it may be required before publishing |
-| Image generation stuck | Wait and retry; check for "图片生成中" text, then wait for "下一步" to appear |
+- 首次登录需要扫码
+- 保持Chrome窗口开启
+- 内容需符合小红书平台规则
+
+---
+
+**理念**：真诚分享 > 刻意营销
