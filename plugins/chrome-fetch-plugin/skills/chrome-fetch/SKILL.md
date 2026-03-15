@@ -24,3 +24,11 @@ Fetch web content through the user's Chrome browser when WebFetch cannot (domain
 - Requires chrome-devtools-mcp with `--autoConnect` and Chrome 144+
 - The user's cookies/sessions are available, so authenticated pages work
 - For complex SPAs, you may need to wait longer or interact (click, scroll) before content appears
+
+## Troubleshooting
+
+**Chrome Connection Issues**: If you encounter "Could not connect to Chrome" errors, see the [Chrome Setup Guide](./CHROME-SETUP.md) for detailed troubleshooting steps.
+
+## Support
+
+If you encounter any issues with this plugin, please report them following our [Support Guide](../../../SUPPORT.md). Your feedback helps improve the community experience!

@@ -46,3 +46,7 @@ Generate versioned slash command files for Claude Code with automatic backup and
    - Web: `WebFetch(*)`, `WebSearch(*)`
 
 ## Command Parameters: $ARGUMENTS
+
+## Support
+
+If you encounter any issues with this plugin, please report them following our [Support Guide](../../../SUPPORT.md). Your feedback helps improve the community experience!

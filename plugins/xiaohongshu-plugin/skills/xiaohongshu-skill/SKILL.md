@@ -180,6 +180,10 @@ mcp1_take_screenshot({ fullPage: true })
 - **[CONTENT_GUIDE.md](CONTENT_GUIDE.md)** - 内容创作指南（美学、运营、技巧）
 - **[WORKFLOW.md](WORKFLOW.md)** - 技术发布流程（10步SOP）
 
+## Support
+
+If you encounter any issues with this plugin, please report them following our [Support Guide](../../../SUPPORT.md). Your feedback helps improve the community experience!
+
 ## Notes
 
 - 首次登录需要扫码

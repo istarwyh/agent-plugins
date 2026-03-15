@@ -27,3 +27,7 @@ Create a WeChat dual-cover image layout as a single self-contained HTML file.
 ## Design Specifications
 
 See `references/design-spec.md` for exact dimensions, proportions, and layout rules.
+
+## Support
+
+If you encounter any issues with this plugin, please report them following our [Support Guide](../../../SUPPORT.md). Your feedback helps improve the community experience!

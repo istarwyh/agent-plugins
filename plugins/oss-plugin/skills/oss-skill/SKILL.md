@@ -44,3 +44,7 @@ skill root directory (`skills/oss-skill/`).
 See the `references/` directory for:
 - `troubleshooting.md` -- common OSS errors and fixes
 - `examples.md` -- detailed usage examples and initialization checklist
+
+## Support
+
+If you encounter any issues with this plugin, please report them following our [Support Guide](../../../SUPPORT.md). Your feedback helps improve the community experience!

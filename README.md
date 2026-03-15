@@ -208,8 +208,9 @@ Individual skills may have different licenses - please check each skill's folder
 
 ## Support
 
-- Issues: [GitHub Issues](https://github.com/istarwyh/agent-plugins/issues)
-- Discussions: [GitHub Discussions](https://github.com/istarwyh/agent-plugins/discussions)
+- **Issues & Bug Reports**: [GitHub Issues](https://github.com/istarwyh/agent-plugins/issues)
+- **General Support**: [Support Guide](SUPPORT.md) - How to report issues and get help
+- **Discussions**: [GitHub Discussions](https://github.com/istarwyh/agent-plugins/discussions)
 
 ---
 

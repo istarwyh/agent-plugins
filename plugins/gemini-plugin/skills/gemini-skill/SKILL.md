@@ -143,3 +143,7 @@ PAGE_LOAD_TIMEOUT=30000
 - `troubleshooting.md` - 常见问题和解决方案
 - `usage_patterns.md` - 使用模式和工作流示例
 - `AUTHENTICATION.md` - 认证架构的技术细节
+
+## Support
+
+If you encounter any issues with this plugin, please report them following our [Support Guide](../../../SUPPORT.md). Your feedback helps improve the community experience!
