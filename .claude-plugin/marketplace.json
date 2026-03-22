@@ -39,10 +39,16 @@
       "category": "productivity-organization"
     },
     {
-  "name": "xiaohongshu-plugin",
-  "description": "Automate Xiaohongshu (小红书) via Chrome DevTools MCP. Triggered when the user wants to open, log in, browse, search, or interact with Xiaohongshu/小红书. Supports login (QR code or phone number), browsing the feed, searching content, viewing post details, and reading user profiles.",
+      "name": "xiaohongshu-plugin",
+      "description": "Automate Xiaohongshu (小红书) via Chrome DevTools MCP. Triggered when the user wants to open, log in, browse, search, or interact with Xiaohongshu/小红书. Supports login (QR code or phone number), browsing the feed, searching content, viewing post details, and reading user profiles.",
       "source": "./plugins/xiaohongshu-plugin",
       "category": "productivity-organization"
-}
+    },
+    {
+      "name": "social-autopilot-plugin",
+      "description": "极客电商社媒自动化：监控漫威/DC/星战等热点新闻，自动生成Instagram/Facebook帖子并排期发布。支持 /social-autopilot 命令和自然语言触发。",
+      "source": "./plugins/social-autopilot-plugin",
+      "category": "productivity-organization"
+    }
   ]
 }
