@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1080px; height: 1080px; overflow: hidden; }
+
+  .card {
+    width: 1080px;
+    height: 1080px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 60px;
+    font-family: 'Inter', sans-serif;
+    color: #ffffff;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      var(--brand-color) 0%,
+      color-mix(in srgb, var(--brand-color) 60%, #000000) 100%
+    );
+    z-index: 0;
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 20% 80%, rgba(255,255,255,0.08) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(255,255,255,0.05) 0%, transparent 40%);
+    z-index: 1;
+  }
+
+  .content { position: relative; z-index: 2; }
+
+  .category-badge {
+    display: inline-block;
+    padding: 10px 24px;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 50px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 32px;
+  }
+
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    font-size: 56px;
+    line-height: 1.15;
+    margin-bottom: 32px;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    max-height: 390px;
+    overflow: hidden;
+  }
+
+  .divider {
+    width: 80px;
+    height: 4px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 2px;
+    margin-bottom: 24px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .brand-logo {
+    width: 48px;
+    height: 48px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    font-size: 22px;
+  }
+
+  .brand-name {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: 1px;
+    opacity: 0.9;
+  }
+
+  .decorative-dots {
+    position: absolute;
+    top: 50px;
+    right: 50px;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: repeat(4, 12px);
+    gap: 14px;
+  }
+
+  .decorative-dots span {
+    width: 12px;
+    height: 12px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%;
+  }
+
+  .news-badge {
+    position: absolute;
+    top: 50px;
+    left: 60px;
+    z-index: 2;
+    padding: 8px 20px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+<div class="card" style="--brand-color: {{BRAND_COLOR}};">
+  <div class="news-badge">📰 NOTÍCIA</div>
+
+  <div class="decorative-dots">
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+  </div>
+
+  <div class="content">
+    <div class="category-badge">{{CATEGORY}}</div>
+    <h1 class="title">{{TITLE}}</h1>
+    <div class="divider"></div>
+    <div class="brand">
+      <div class="brand-logo">G</div>
+      <span class="brand-name">GEEK STORE</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>
