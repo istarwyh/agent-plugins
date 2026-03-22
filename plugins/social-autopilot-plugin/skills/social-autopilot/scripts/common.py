@@ -153,6 +153,7 @@ class AppContext:
     config: dict
     anthropic_key: str = ""
     anthropic_model: str = "claude-haiku-4-5-20251001"
+    anthropic_base_url: str = "https://api.anthropic.com"
     meta_page_id: str = ""
     meta_token: str = ""
     meta_ig_id: str = ""
@@ -181,6 +182,7 @@ def load_context(dry_run: bool = False) -> AppContext:
         config=config,
         anthropic_key=os.getenv("ANTHROPIC_API_KEY", ""),
         anthropic_model=os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001"),
+        anthropic_base_url=os.getenv("ANTHROPIC_BASE_URL", "https://api.anthropic.com"),
         meta_page_id=os.getenv("META_PAGE_ID", ""),
         meta_token=os.getenv("META_PAGE_ACCESS_TOKEN", ""),
         meta_ig_id=os.getenv("META_IG_USER_ID", ""),

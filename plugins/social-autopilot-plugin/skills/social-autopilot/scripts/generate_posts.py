@@ -189,7 +189,7 @@ def main(args: list[str] = None) -> list[PostDraft]:
         print(f"[DRY-RUN] 将处理 {len(news_items)} 条新闻")
         return []
 
-    client = Anthropic(api_key=ctx.anthropic_key)
+    client = Anthropic(api_key=ctx.anthropic_key, base_url=ctx.anthropic_base_url)
     drafts = []
     for item in news_items:
         draft = generate_post(

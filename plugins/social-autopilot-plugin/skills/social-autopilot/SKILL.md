@@ -38,7 +38,7 @@ description: >
 当用户首次使用此skill时，按以下步骤引导：
 
 1. **运行 setup.py**: 自动创建 `~/social-autopilot/` 目录结构和配置文件
-2. **配置 LLM API Key**: 用户已在使用 Claude Code，引导填入 ANTHROPIC_API_KEY
+2. **配置 LLM API Key**: 用户已在使用 Claude Code，引导填入 ANTHROPIC_API_KEY 和 ANTHROPIC_BASE_URL（如需使用兼容API）
 3. **配置 Meta API**（可选）: 参考 SETUP_GUIDE.md 引导用户完成 Meta App 创建和 Token 获取
 4. **试运行验证**: `python scripts/run.py pipeline --dry-run`
 5. **安装定时任务**: `python scripts/run.py install_cron.py`
