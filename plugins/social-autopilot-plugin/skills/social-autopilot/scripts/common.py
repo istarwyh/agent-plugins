@@ -10,7 +10,7 @@ from loguru import logger
 WORK_DIR = Path.home() / "social-autopilot"
 SKILL_DIR = Path(__file__).resolve().parent.parent
 
-REQUIRED_VARS = ["ANTHROPIC_API_KEY"]
+REQUIRED_VARS = ["OPENAI_API_KEY"]
 
 DEFAULT_CONFIG = {
     "sources": [
@@ -151,9 +151,9 @@ class AppContext:
     work_dir: Path
     db_path: Path
     config: dict
-    anthropic_key: str = ""
-    anthropic_model: str = "claude-haiku-4-5-20251001"
-    anthropic_base_url: str = "https://api.anthropic.com"
+    openai_key: str = ""
+    openai_base_url: str = ""
+    openai_model: str = "moonshotai/kimi-k2.5"
     meta_page_id: str = ""
     meta_token: str = ""
     meta_ig_id: str = ""
@@ -165,7 +165,7 @@ class AppContext:
 def load_context(dry_run: bool = False) -> AppContext:
     env_path = WORK_DIR / ".env"
     if env_path.exists():
-        load_dotenv(env_path, override=False)
+        load_dotenv(env_path, override=True)
 
     missing = [k for k in REQUIRED_VARS if not os.getenv(k)]
     if missing and not dry_run:
@@ -180,9 +180,9 @@ def load_context(dry_run: bool = False) -> AppContext:
         work_dir=WORK_DIR,
         db_path=WORK_DIR / "data" / "news.db",
         config=config,
-        anthropic_key=os.getenv("ANTHROPIC_API_KEY", ""),
-        anthropic_model=os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001"),
-        anthropic_base_url=os.getenv("ANTHROPIC_BASE_URL", "https://api.anthropic.com"),
+        openai_key=os.getenv("OPENAI_API_KEY", ""),
+        openai_base_url=os.getenv("OPENAI_BASE_URL", ""),
+        openai_model=os.getenv("OPENAI_MODEL", "moonshotai/kimi-k2.5"),
         meta_page_id=os.getenv("META_PAGE_ID", ""),
         meta_token=os.getenv("META_PAGE_ACCESS_TOKEN", ""),
         meta_ig_id=os.getenv("META_IG_USER_ID", ""),

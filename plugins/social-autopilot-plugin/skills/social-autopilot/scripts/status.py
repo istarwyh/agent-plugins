@@ -78,8 +78,8 @@ def main(args: list[str] = None):
     print(f"\nAPI配置:")
     try:
         ctx = load_context(dry_run=True)
-        print(f"  Anthropic Key: {'✓ 已配置' if ctx.anthropic_key else '✗ 未配置'}")
-        print(f"  Anthropic Model: {ctx.anthropic_model}")
+        print(f"  OpenAI Key: {'✓ 已配置' if ctx.openai_key else '✗ 未配置'}")
+        print(f"  OpenAI Model: {ctx.openai_model}")
         print(f"  Meta Page ID: {'✓ 已配置' if ctx.meta_page_id else '✗ 未配置'}")
         print(f"  Meta Token: {'✓ 已配置' if ctx.meta_token else '✗ 未配置'}")
         print(f"  Instagram ID: {'✓ 已配置' if ctx.meta_ig_id else '✗ 未配置'}")

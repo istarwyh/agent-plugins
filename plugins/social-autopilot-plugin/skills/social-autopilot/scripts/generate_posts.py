@@ -1,13 +1,27 @@
 import argparse
 import json
+import re
 import time
 from pathlib import Path
 
-from anthropic import Anthropic
+from openai import OpenAI
 from loguru import logger
 
 from common import load_context, init_db, ensure_dirs, get_db
 from models import NewsItem, PostDraft
+
+def fix_json(text: str) -> str:
+    """Fix common JSON issues from LLM output."""
+    # Strip markdown code blocks
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1].rsplit("```", 1)[0]
+    # Extract JSON object if surrounded by other text
+    m = re.search(r'\{.*\}', text, re.DOTALL)
+    if m:
+        text = m.group(0)
+    # Fix missing opening quotes before # in arrays: [... , #tag"] -> [... , "#tag"]
+    text = re.sub(r'(?<=[\[,])\s*#', ' "#', text)
+    return text
 
 SYSTEM_PROMPT = """Você é um especialista em marketing digital para um e-commerce brasileiro de colecionáveis geek.
 
@@ -84,7 +98,7 @@ def fix_hashtags(hashtags: list, tags_seed: list[str]) -> list[str]:
 
 
 def generate_post(
-    client: Anthropic,
+    client: OpenAI,
     model: str,
     news: NewsItem,
     tags_seed: list[str],
@@ -95,15 +109,17 @@ def generate_post(
 
     for attempt in range(max_retries):
         try:
-            resp = client.messages.create(
+            resp = client.chat.completions.create(
                 model=model,
-                max_tokens=800,
-                system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": prompt}],
+                max_tokens=4096,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": prompt},
+                ],
+                extra_body={"chat_template_kwargs": {"thinking": False}},
             )
-            text = resp.content[0].text.strip()
-            if text.startswith("```"):
-                text = text.split("\n", 1)[1].rsplit("```", 1)[0]
+            text = (resp.choices[0].message.content or "").strip()
+            text = fix_json(text)
 
             data = json.loads(text)
 
@@ -189,11 +205,14 @@ def main(args: list[str] = None) -> list[PostDraft]:
         print(f"[DRY-RUN] 将处理 {len(news_items)} 条新闻")
         return []
 
-    client = Anthropic(api_key=ctx.anthropic_key, base_url=ctx.anthropic_base_url)
+    client_kwargs = {"api_key": ctx.openai_key}
+    if ctx.openai_base_url:
+        client_kwargs["base_url"] = ctx.openai_base_url
+    client = OpenAI(**client_kwargs)
     drafts = []
     for item in news_items:
         draft = generate_post(
-            client, ctx.anthropic_model, item,
+            client, ctx.openai_model, item,
             tags_map.get(item.source_id, []),
             ctx.min_relevance,
         )

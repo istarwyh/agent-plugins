@@ -37,7 +37,7 @@ def main(args: list[str] = None):
     else:
         shutil.copy2(ENV_EXAMPLE, env_path)
         print(f"  ✓ 已复制 .env.example → {env_path}")
-        print("  ⚠ 请编辑此文件填入 ANTHROPIC_API_KEY")
+        print("  ⚠ 请编辑此文件填入 OPENAI_API_KEY")
 
     # 3. Create config.json
     config_path = WORK_DIR / "config.json"
@@ -55,7 +55,7 @@ def main(args: list[str] = None):
     # 4. Check dependencies
     print("\n[4/4] 检查依赖")
     missing = []
-    for pkg in ["feedparser", "anthropic", "pydantic", "dotenv", "loguru"]:
+    for pkg in ["feedparser", "openai", "pydantic", "dotenv", "loguru"]:
         try:
             __import__(pkg)
         except ImportError:
