@@ -49,6 +49,12 @@
       "description": "极客电商社媒自动化：监控漫威/DC/星战等热点新闻，自动生成Instagram/Facebook帖子并排期发布。支持 /social-autopilot 命令和自然语言触发。",
       "source": "./plugins/social-autopilot-plugin",
       "category": "productivity-organization"
+    },
+    {
+      "name": "swarm-plugin",
+      "description": "Decomposes complex tasks into parallel subtasks and coordinates an Agent Team of teammates. Triggers when user describes a multi-part development task or uses keywords like team/swarm/parallel/拆分/并行.",
+      "source": "./plugins/swarm-plugin",
+      "category": "productivity-organization"
     }
   ]
 }

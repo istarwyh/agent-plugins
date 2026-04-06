@@ -1,0 +1,9 @@
+{
+  "name": "swarm-plugin",
+  "description": "Decomposes complex tasks into parallel subtasks and coordinates an Agent Team of teammates. Triggers when user describes a multi-part development task or uses keywords like team/swarm/parallel/拆分/并行.",
+  "version": "1.0.0",
+  "author": {
+    "name": "xiaohui",
+    "email": "talk@xiaohui.cool"
+  }
+}
