@@ -1,5 +1,11 @@
 # WeChat Cover Design Specifications
 
+## Color Constraints
+
+**BANNED**: Blue (#3b82f6, #2563eb, #1d4ed8...), Purple (#8b5cf6, #a855f7, #7c3aed...), Indigo (#6366f1...), Violet, Cyan (#06b6d4, #0891b2...) — 全部禁止。
+
+**APPROVED palettes**: Amber/Gold (#f59e0b, #eab308, #fbbf24), Coral/Warm Red (#e8553a, #ea580c, #e11d48), Emerald (#10b981, #059669), Dark Charcoal (#0f0e0b, #1a1710), Cream (#fef3c7, #fde68a), Slate/Neutral grays.
+
 ## Dimensions & Proportions
 
 | Element | Ratio | Notes |
