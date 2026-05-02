@@ -1,0 +1,40 @@
+name: Bump manifest versions
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bump-manifest-versions-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  bump-versions:
+    if: >-
+      github.actor != 'github-actions[bot]' &&
+      !contains(github.event.head_commit.message, 'chore: bump manifest versions')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Bump manifest versions
+        run: python scripts/bump_versions.py "${{ github.event.before }}" "${{ github.sha }}"
+
+      - name: Commit and push version changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore: bump manifest versions [skip ci]'
+          file_pattern: '.claude-plugin/marketplace.json plugins/*/.claude-plugin/plugin.json'
