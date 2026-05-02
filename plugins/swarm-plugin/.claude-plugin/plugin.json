@@ -5,5 +5,7 @@
   "author": {
     "name": "xiaohui",
     "email": "talk@xiaohui.cool"
-  }
+  },
+  "repository": "https://github.com/istarwyh/agent-plugins",
+  "homepage": "https://github.com/istarwyh/agent-plugins"
 }

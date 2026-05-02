@@ -60,3 +60,61 @@ If no skill matches a role, omit the skill section entirely. Teammates work fine
 2. 询问用户是否 push
 完成后标记任务为 completed。
 ```
+
+## Full Agent Call Example
+
+Below is a complete example showing the flow from decomposition to spawning teammates. This illustrates the exact Agent tool calls you must make.
+
+**Scenario:** User asks to "implement a new CLI command with tests and update the docs."
+
+### Step 1: Decompose (in main session)
+
+Split into 3 subtasks:
+- `developer`: implement the CLI command in `src/commands/new-cmd.ts`
+- `tester`: write tests in `tests/commands/new-cmd.test.ts`
+- `doc-writer`: update `README.md` with usage examples
+
+### Step 2: Create Team & Tasks (in main session)
+
+```
+TeamCreate({ team_name: "cli-feature", description: "Implement new CLI command" })
+
+TaskCreate({ subject: "Implement CLI command", description: "...", owner: "developer" })
+TaskCreate({ subject: "Write tests", description: "...", owner: "tester" })
+TaskCreate({ subject: "Update docs", description: "...", owner: "doc-writer" })
+
+// Set dependency: tester waits for developer
+TaskUpdate({ taskId: "<test-task-id>", addBlockedBy: ["<dev-task-id>"] })
+```
+
+### Step 3: Spawn Teammates (in a SINGLE message)
+
+You MUST send all three Agent calls in one response to spawn them in parallel:
+
+```
+// These three calls go in ONE message — parallel tool use
+
+Agent({
+  description: "Implement CLI command",
+  prompt: "你是 developer。查看任务列表，认领并完成你的任务。\n\n实现一个新的 CLI 命令...\n\n完成后标记任务为 completed。",
+  run_in_background: true
+})
+
+Agent({
+  description: "Write tests for CLI command",
+  prompt: "你是 tester。查看任务列表，认领并完成你的任务。\n\n为 CLI 命令编写测试...\n\n完成后标记任务为 completed。",
+  run_in_background: true
+})
+
+Agent({
+  description: "Update documentation",
+  prompt: "你是 doc-writer。查看任务列表，认领并完成你的任务。\n\n更新 README...\n\n完成后标记任务为 completed。",
+  run_in_background: true
+})
+```
+
+**Key points:**
+- All three `Agent()` calls appear in a single assistant message (parallel tool use)
+- `run_in_background: true` on every call — teammates run concurrently
+- The tester will self-wait because of `addBlockedBy` — no need to delay its spawn
+- Do NOT implement anything in the main session yourself

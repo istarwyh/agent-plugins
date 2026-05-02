@@ -52,13 +52,29 @@ Use `addBlockedBy` for dependencies — blocked teammates wait automatically.
 
 ### 3. Spawn Teammates
 
-1. Spawn independent teammates **in parallel** (single message, multiple Agent calls)
-2. Dependent teammates also spawn immediately — they self-wait
-3. All use `run_in_background: true`
+You **MUST** use the `Agent` tool to spawn teammates. You **MUST NOT** implement code directly in the main session — all implementation work **MUST** be delegated to Agent teammates.
+
+**How to spawn — concrete tool call:**
+
+```
+Agent({
+  description: "Short summary of this teammate's job",
+  prompt: "Full prompt using the template from references/patterns.md",
+  run_in_background: true
+})
+```
+
+**Parallelism rules:**
+
+1. Spawn all independent teammates in a **single message** (multiple Agent tool calls in one response). Do NOT spawn them one by one.
+2. Dependent teammates also spawn immediately — they self-wait via `addBlockedBy`.
+3. All teammates **MUST** use `run_in_background: true`.
 
 Build prompts using the template in [references/patterns.md](references/patterns.md#teammate-prompt-template). Only inject actually-discovered skills.
 
-**Agent type:** default for code, `"Explore"` for research, `"Plan"` for design.
+**Agent type:** default (omit `subagent_type`) for code, `"Explore"` for research, `"Plan"` for design.
+
+See [references/patterns.md](references/patterns.md#full-agent-call-example) for a complete end-to-end example.
 
 ### 4. Monitor & Coordinate
 
