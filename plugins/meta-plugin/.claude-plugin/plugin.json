@@ -1,7 +1,7 @@
 {
   "name": "meta-plugin",
-  "description": "Generate slash commands with semantic versioning, automatic backups, and changelog tracking. Use when the user wants to create, update, or version-manage Claude Code slash commands.",
-  "version": "1.0.0",
+  "description": "Meta plugin for Claude Code utilities. Includes: 1) Slash command generator with semantic versioning, automatic backups, and changelog tracking; 2) Task completion notifications with cross-platform support (macOS/Linux/Windows).",
+  "version": "1.1.0",
   "author": {
     "name": "xiaohui",
     "email": "talk@xiaohui.cool"
