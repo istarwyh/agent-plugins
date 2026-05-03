@@ -53,3 +53,19 @@ xdg-open /tmp/xhs-qrcode.png  # Linux
 |---|---|
 | MCP 工具不可用 | 引导用户使用 `/setup-xhs-mcp` 完成部署和连接配置 |
 | 二维码超时 | 重新调用 `get_login_qrcode` |
+| 短信验证码拦截 | 见下方 fallback |
+
+### Fallback：短信验证码拦截
+
+MCP 服务使用的 Chrome 带有自动化特征，可能被小红书风控识别并触发短信验证码拦截（参见 [xiaohongshu-mcp#681](https://github.com/xpzouying/xiaohongshu-mcp/issues/681)）。
+
+当扫码登录触发短信验证时，引导用户使用独立的 `xiaohongshu-login` 二进制完成登录：
+
+```bash
+cd ~/.claude/plugins/xiaohongshu-mcp
+ROD_BROWSER_BIN="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" ./xiaohongshu-login-darwin-arm64
+```
+
+该二进制会打开可见的 Chrome 窗口，使用真实浏览器 profile，不会触发拦截。登录完成后回到 Claude Code，调用 `check_login_status` 确认登录状态即可。
+
+**判断是否触发拦截的信号**：用户报告扫码后要求输入短信验证码、页面显示安全验证、或扫码后长时间无响应。
