@@ -67,6 +67,12 @@ description: |
 - 不抄袭他人内容，不堆砌无关标签
 - 不输出纯文字无图、排版混乱或内容空洞的方案
 
+## 参考资料
+
+- 标题创作规范：`{baseDir}/../references/title-guide.md`
+- 正文创作规范：`{baseDir}/../references/content-guide.md`
+- 封面设计规范：`{baseDir}/../references/cover-guide.md`
+
 ## 约束
 
 - 这是只读分析 skill，不执行任何发布或互动操作
