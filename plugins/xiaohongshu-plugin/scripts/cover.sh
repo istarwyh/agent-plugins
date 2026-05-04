@@ -186,7 +186,7 @@ else
     curl -s -X POST "${IMG_API_BASE}/images/generations" \
       -H "Content-Type: application/json" \
       -H "Authorization: Bearer ${IMG_API_KEY}" \
-      -d "{\"model\": \"${IMG_MODEL}\", \"prompt\": ${PROMPT_ESCAPED}, \"n\": 1, \"size\": \"1536x1024\", \"response_format\": \"b64_json\"}" \
+      -d "{\"model\": \"${IMG_MODEL}\", \"prompt\": ${PROMPT_ESCAPED}, \"n\": 1, \"size\": \"1792x1024\", \"response_format\": \"b64_json\"}" \
       -o "$RESPONSE_FILE"
 
     # 提取 base64 图片
@@ -217,7 +217,7 @@ else:
     print(f"ERROR:{error}", file=sys.stderr)
     sys.exit(1)
 PYEOF
-    python3 "$EXTRACT_PY" "$RESPONSE_FILE" "$AI_IMG" 2>/tmp/xhs_cover_err.log
+    python3 "$EXTRACT_PY" "$RESPONSE_FILE" "$AI_IMG" 2>${TMP_DIR}/error.log
 
   elif [ "$IMG_API_TYPE" = "hunyuan" ]; then
     echo "   服务: aiart (腾讯云混元生图)"
@@ -274,7 +274,7 @@ print(json.dumps({
 PYEOF
 
     # 用 python3 的 argv 传 prompt，避免 bash 引号地狱
-    python3 "$GEN_PY" "$PROMPT" "$AI_IMG" 2>/tmp/xhs_cover_err.log | tee "${TMP_DIR}/hunyuan_meta.json" >/dev/null
+    python3 "$GEN_PY" "$PROMPT" "$AI_IMG" 2>${TMP_DIR}/error.log | tee "${TMP_DIR}/hunyuan_meta.json" >/dev/null
 
   else
     # Gemini 模式（默认）
@@ -339,12 +339,12 @@ if not found:
     print(f"ERROR:{error}", file=sys.stderr)
     sys.exit(1)
 PYEOF
-    python3 "$EXTRACT_PY" "$RESPONSE_FILE" "$AI_IMG" 2>/tmp/xhs_cover_err.log
+    python3 "$EXTRACT_PY" "$RESPONSE_FILE" "$AI_IMG" 2>${TMP_DIR}/error.log
 
   fi  # 结束 API 类型判断
 
 if [ ! -s "$AI_IMG" ]; then
-  ERR=$(cat /tmp/xhs_cover_err.log 2>/dev/null)
+  ERR=$(cat ${TMP_DIR}/error.log 2>/dev/null)
   echo "❌ 图片生成失败: ${ERR:-未知错误}"
   echo ""
   echo "⚠️ 将使用渐变色占位图代替..."

@@ -44,12 +44,16 @@ if command -v jq &> /dev/null; then
         echo -e "${YELLOW}Stop hook already exists. Updating...${NC}"
     fi
 
-    # Update settings with jq
-    jq '.hooks.Stop[0].hooks[0] = {
-        "type": "command",
-        "command": "bash '"$NOTIFY_SCRIPT"' \"Claude Code\" \"任务已完成，请查看结果\"",
-        "timeout": 10
-    }' "$SETTINGS_FILE" > "${SETTINGS_FILE}.tmp" && mv "${SETTINGS_FILE}.tmp" "$SETTINGS_FILE"
+    # Append notification hook to Stop hooks (non-destructive)
+    local new_hook
+    new_hook=$(jq -n \
+        --arg cmd "bash $NOTIFY_SCRIPT \"Claude Code\" \"任务已完成，请查看结果\"" \
+        '{"type": "command", "command": $cmd, "timeout": 10}')
+    jq --argjson hook "$new_hook" '
+        .hooks.Stop //= [{"hooks": []}] |
+        .hooks.Stop[0].hooks //= [] |
+        .hooks.Stop[0].hooks += [$hook]
+    ' "$SETTINGS_FILE" > "${SETTINGS_FILE}.tmp" && mv "${SETTINGS_FILE}.tmp" "$SETTINGS_FILE"
 
     echo -e "${GREEN}✓ Notification hooks configured successfully!${NC}"
 else

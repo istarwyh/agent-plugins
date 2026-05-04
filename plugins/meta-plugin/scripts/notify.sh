@@ -56,7 +56,13 @@ send_notification() {
 
 # macOS notification using osascript
 send_macos_notification() {
-    osascript -e "display notification \"$MESSAGE\" with title \"$TITLE\""
+    # Escape backslashes and double quotes for AppleScript string literals
+    local safe_title safe_message
+    safe_title="${TITLE//\\/\\\\}"
+    safe_title="${safe_title//\"/\\\"}"
+    safe_message="${MESSAGE//\\/\\\\}"
+    safe_message="${safe_message//\"/\\\"}"
+    osascript -e "display notification \"$safe_message\" with title \"$safe_title\""
 
     if [[ "$SOUND" == "true" ]]; then
         osascript -e "beep"
@@ -85,20 +91,25 @@ send_linux_notification() {
 # Windows notification using PowerShell
 send_windows_notification() {
     if command -v powershell.exe &> /dev/null; then
+        # Pass title and message via environment variables to avoid command injection
+        NOTIFY_TITLE="$TITLE" NOTIFY_MESSAGE="$MESSAGE" \
         powershell.exe -Command "
             [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
             [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null
 
-            \$template = @'
+            \$safeTitle = [System.Security.SecurityElement]::Escape(\$env:NOTIFY_TITLE)
+            \$safeMessage = [System.Security.SecurityElement]::Escape(\$env:NOTIFY_MESSAGE)
+
+            \$template = @\"
 <toast>
     <visual>
         <binding template='ToastGeneric'>
-            <text>$TITLE</text>
-            <text>$MESSAGE</text>
+            <text>\$safeTitle</text>
+            <text>\$safeMessage</text>
         </binding>
     </visual>
 </toast>
-'@
+\"@
 
             \$xml = New-Object Windows.Data.Xml.Dom.XmlDocument
             \$xml.LoadXml(\$template)
