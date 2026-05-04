@@ -1,7 +1,7 @@
 {
   "name": "xiaohongshu-plugin",
   "description": "Automate Xiaohongshu (小红书) via Chrome DevTools MCP. Triggered when the user wants to open, log in, browse, search, or interact with Xiaohongshu/小红书. Supports login (QR code or phone number), browsing the feed, searching content, viewing post details, and reading user profiles.",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "author": {
     "name": "xiaohui",
     "email": "talk@xiaohui.cool"
