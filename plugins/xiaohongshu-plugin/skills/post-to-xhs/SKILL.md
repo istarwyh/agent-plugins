@@ -37,18 +37,19 @@ description: |
 
 信息不完整时，向用户询问缺少的部分。
 
-### 2. 内容校验
+### 2. 内容校验与优化
 
 - 检查标题长度（≤20 中文字）
 - 检查图片/视频文件路径是否为绝对路径
 - 如用户提供 URL 内容，先用 WebFetch 提取文本和图片
 - 如用户只给出主题或草稿，先按内容质量原则补齐标题、正文和标签
-- 检查内容是否真实、有实用价值，避免硬广、虚假宣传、抄袭和标题党
 
-### 2.1 内容质量原则
+参考 `{baseDir}/../references/title-guide.md` 和 `{baseDir}/../references/content-guide.md` 进行内容优化。
+
+#### 内容质量原则
 
 **标题策略**：
-- 使用“数字 + 痛点/好处 + emoji”增强吸引力
+- 使用"数字 + 痛点/好处 + emoji"增强吸引力
 - 可使用悬念、共鸣、价值、对比或限定人群提升点击意愿
 - 避免过于平淡、空泛或与正文不符的标题
 
@@ -67,33 +68,26 @@ description: |
 - 组合热门话题、精准定位和长尾标签
 - 标签必须与内容强相关，避免堆砌无关大词
 
-**内容类型模板**：
-- 干货分享：痛点 + 解决方案 + 3-5 个要点 + 总结互动
-- 好物推荐：真实使用感受 + 优缺点 + 适合人群 + 购买建议
-- 教程攻略：为什么要学 + 步骤详解 + 注意事项 + 可执行结论
+### 3. 封面图（图文笔记）
 
-**发布前自检**：
-- 标题是否吸引人且不超过 20 字
-- 开头是否抓住注意力
-- 内容是否有实用价值
-- 排版是否清晰易读
-- emoji 使用是否恰当
-- 是否有自然的互动引导
-- 标签是否精准且数量为 3-6 个
-- 正文是否控制在适合小红书阅读的篇幅内
+如果用户没有提供封面图，引导使用 `/xhs-cover` 生成封面图：
+- 有封面图 → 使用封面图上传模式（Mode A）
+- 无封面图 → 使用文字配图模式（Mode B，平台自动生成图片）
 
-### 3. 确认发布
+### 4. 确认发布
 
 向用户展示完整的发布内容预览：
 - 标题、正文、标签
-- 图片列表或视频路径
+- 图片列表/封面图/视频路径
 - 定时时间、可见范围（如有）
 
 等待用户确认后才执行发布。
 
-### 4. 发布
+### 5. 执行发布（双引擎）
 
-**图文笔记** — 调用 `publish_content`：
+**方式一：MCP 工具（优先）**
+
+图文笔记 — 调用 `publish_content`：
 - `title`（string，必填）
 - `content`（string，必填）
 - `images`（string[]，必填）— 图片路径或 URL
@@ -102,7 +96,7 @@ description: |
 - `is_original`（bool，可选）
 - `visibility`（string，可选）
 
-**视频笔记** — 调用 `publish_with_video`：
+视频笔记 — 调用 `publish_with_video`：
 - `title`（string，必填）
 - `content`（string，必填）
 - `video`（string，必填）— 本地视频绝对路径
@@ -110,7 +104,71 @@ description: |
 - `schedule_at`（string，可选）
 - `visibility`（string，可选）
 
-### 5. 报告结果
+**MCP 工具失败判断**：
+- 返回错误信息
+- 调用超时（>60 秒无响应）
+- 返回成功但无法验证
+
+**方式二：Chrome DevTools MCP（MCP 失败时自动切换）**
+
+当 MCP 工具失败/超时时，切换到浏览器直接操作：
+
+1. 确保 Chrome 调试模式：
+   ```bash
+   bash {baseDir}/../scripts/ensure-chrome-debug.sh
+   ```
+
+2. 导航到创作中心：
+   ```
+   navigate_page → url: https://creator.xiaohongshu.com/publish/publish
+   ```
+
+3. 参考 `{baseDir}/../references/workflow.md` 执行发布 SOP：
+
+   **Mode A：自定义封面图上传**
+   - `take_snapshot` 找到"上传图文"按钮 → `click`
+   - `upload_file` 上传封面图
+   - 等待处理 → `take_snapshot` 找到"下一步" → `click`
+   - 用 `evaluate_script` 填写标题（nativeInputValueSetter 模式）
+   - `take_snapshot` 找到"发布"按钮 → `click`
+
+   **Mode B：文字配图发布**
+   - `take_snapshot` 找到"上传图文" → `click`
+   - `take_snapshot` 找到"文字配图" → `click`
+   - 用 `evaluate_script` 通过 ClipboardEvent 粘贴内容到 `.tiptap.ProseMirror` 编辑器
+   - 点击"生成图片" → 等待预览
+   - "下一步" → 填写标题 → 发布
+
+4. 验证发布成功：**URL 包含 `published=true`**（小红书不显示"发布成功"文字）
+
+5. 每步操作后用 `take_screenshot` 或 `take_snapshot` 确认状态
+
+#### 关键技术模式
+
+**标题填写（React 应用）**：
+```javascript
+const input = document.querySelector('input[placeholder*="标题"]');
+const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+  window.HTMLInputElement.prototype, 'value'
+).set;
+nativeInputValueSetter.call(input, '标题文字');
+input.dispatchEvent(new Event('input', { bubbles: true }));
+input.dispatchEvent(new Event('change', { bubbles: true }));
+```
+
+**正文粘贴（tiptap 编辑器）**：
+```javascript
+const editor = document.querySelector('.tiptap.ProseMirror');
+const dt = new DataTransfer();
+dt.setData('text/html', '<p>正文内容</p>');
+dt.setData('text/plain', '正文内容');
+const evt = new ClipboardEvent('paste', {
+  bubbles: true, cancelable: true, clipboardData: dt
+});
+editor.dispatchEvent(evt);
+```
+
+### 6. 报告结果
 
 发布成功后，告知用户笔记 ID 和发布状态。
 
@@ -123,4 +181,15 @@ description: |
 | 图片路径无效 | 提示检查路径是否正确 |
 | 视频使用了相对路径 | 提示改为绝对路径 |
 | 内容质量不足 | 先优化标题、正文、排版和标签，再请求用户确认 |
-| 发布失败 | 展示错误信息，建议检查内容或重试 |
+| MCP 工具失败/超时 | 自动切换到 Chrome DevTools MCP 路径 |
+| Chrome DevTools 操作失败 | `take_snapshot` 查看页面结构重试 |
+| 页面加载超时 | 等 5-10 秒后 `take_screenshot` 确认 |
+| 登录过期 | 检测到登录页时提示重新登录 |
+
+## 参考资料
+
+- 发布 SOP 工作流：`{baseDir}/../references/workflow.md`
+- 页面结构参考：`{baseDir}/../references/web-structure.md`
+- 标题创作规范：`{baseDir}/../references/title-guide.md`
+- 正文创作规范：`{baseDir}/../references/content-guide.md`
+- 封面图生成：`{baseDir}/xhs-cover/SKILL.md`
