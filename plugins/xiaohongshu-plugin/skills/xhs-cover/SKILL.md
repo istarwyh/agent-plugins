@@ -15,7 +15,7 @@ description: |
 ## 前置检查
 
 ```bash
-bash {baseDir}/../scripts/check_env.sh
+bash {baseDir}/../../scripts/check_env.sh
 ```
 
 退出码 `2` 表示无图像工具，需安装：
@@ -44,7 +44,7 @@ bash {baseDir}/../scripts/check_env.sh
 > 1. **预设推荐** — 我根据你的文案主题自动生成最佳英文 prompt
 > 2. **自定义提示词** — 你提供想要的画面描述，我来翻译成英文 prompt
 
-参考 `{baseDir}/../references/cover-guide.md` 中的 Prompt 编写规范和配色库。
+参考 `{baseDir}/../../references/cover-guide.md` 中的 Prompt 编写规范和配色库。
 
 确认 prompt 后，根据主题从配色库选择底色和字色（必须主动搭配，禁止白底黑字）。
 
@@ -65,13 +65,13 @@ bash {baseDir}/../scripts/check_env.sh
 
 ```bash
 # Gemini（默认）
-GEMINI_API_KEY=xxx bash {baseDir}/../scripts/cover.sh "标题" "prompt" [输出路径] [底色hex] [字色hex]
+GEMINI_API_KEY=xxx bash {baseDir}/../../scripts/cover.sh "标题" "prompt" [输出路径] [底色hex] [字色hex]
 
 # OpenAI 兼容
-IMG_API_TYPE=openai IMG_API_KEY=xxx IMG_API_BASE=https://api.openai.com/v1 IMG_MODEL=dall-e-3 bash {baseDir}/../scripts/cover.sh "标题" "prompt" [输出路径] [底色hex] [字色hex]
+IMG_API_TYPE=openai IMG_API_KEY=xxx IMG_API_BASE=https://api.openai.com/v1 IMG_MODEL=dall-e-3 bash {baseDir}/../../scripts/cover.sh "标题" "prompt" [输出路径] [底色hex] [字色hex]
 
 # 腾讯云混元生图（AIART）
-IMG_API_TYPE=hunyuan HUNYUAN_SECRET_ID=AKID... HUNYUAN_SECRET_KEY=... bash {baseDir}/../scripts/cover.sh "标题" "prompt" [输出路径] [底色hex] [字色hex]
+IMG_API_TYPE=hunyuan HUNYUAN_SECRET_ID=AKID... HUNYUAN_SECRET_KEY=... bash {baseDir}/../../scripts/cover.sh "标题" "prompt" [输出路径] [底色hex] [字色hex]
 ```
 
 ### 3B. 用户选择「上传图片」
@@ -79,7 +79,7 @@ IMG_API_TYPE=hunyuan HUNYUAN_SECRET_ID=AKID... HUNYUAN_SECRET_KEY=... bash {base
 用户提供图片路径后，搭配底色和字色，执行：
 
 ```bash
-bash {baseDir}/../scripts/cover.sh "标题文字" "__USER_IMAGE__:/path/to/image.jpg" [输出路径] [底色hex] [字色hex]
+bash {baseDir}/../../scripts/cover.sh "标题文字" "__USER_IMAGE__:/path/to/image.jpg" [输出路径] [底色hex] [字色hex]
 ```
 
 ### 4. 确认输出
@@ -95,6 +95,6 @@ bash {baseDir}/../scripts/cover.sh "标题文字" "__USER_IMAGE__:/path/to/image
 
 ## 参考资料
 
-- 封面设计规范：`{baseDir}/../references/cover-guide.md`
-- 图片处理工具：`{baseDir}/../scripts/cover.sh`
-- 环境检查：`{baseDir}/../scripts/check_env.sh`
+- 封面设计规范：`{baseDir}/../../references/cover-guide.md`
+- 图片处理工具：`{baseDir}/../../scripts/cover.sh`
+- 环境检查：`{baseDir}/../../scripts/check_env.sh`

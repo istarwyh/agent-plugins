@@ -5,25 +5,33 @@ description: |
   当用户想查看某个博主、作者、用户的主页信息和作品时使用。
 ---
 
+CLI 路径：`python3 {baseDir}/../../xiaohongshu-skills/scripts/cli.py`
+
 ## 执行流程
 
 ### 1. 获取用户信息
 
-调用 `user_profile`：
-- `user_id`（string，必填）— 用户 ID（来自笔记详情或搜索结果）
-- `xsec_token`（string，必填）
+```bash
+python3 {baseDir}/../../xiaohongshu-skills/scripts/cli.py user-profile \
+  --user-id <user_id> \
+  --xsec-token <xsec_token>
+```
+
+`user_id` 和 `xsec_token` 从搜索或笔记详情结果中获取。
 
 ### 2. 展示结果
 
 - 基本信息：昵称、头像、简介、性别、地区
 - 数据：粉丝数、关注数、获赞与收藏数
-- 最近发布的笔记列表（含 feed_id 和 xsec_token）
+- 最近发布的笔记列表
 
-提示用户可以查看某条笔记详情或进行互动。
+## 兜底（Chrome DevTools MCP）
 
-## 失败处理
+CLI 失败时：
 
-| 场景 | 处理 |
-|---|---|
-| 未登录 | 引导使用 xhs-login |
-| 用户不存在 | 告知用户该主页无法访问 |
+```bash
+bash {baseDir}/../../scripts/ensure-chrome-debug.sh
+```
+
+- `navigate_page` → 用户主页 URL
+- `take_snapshot` → 提取用户信息和笔记列表
