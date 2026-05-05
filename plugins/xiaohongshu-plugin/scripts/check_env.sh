@@ -13,7 +13,7 @@ if command -v python3 &> /dev/null; then
   PY_VER=$(python3 --version 2>&1 | grep -oE '[0-9]+\.[0-9]+')
   PY_MAJOR=$(echo "$PY_VER" | cut -d. -f1)
   PY_MINOR=$(echo "$PY_VER" | cut -d. -f2)
-  if [ "$PY_MAJOR" -ge 3 ] && [ "$PY_MINOR" -ge 11 ]; then
+  if [ "$PY_MAJOR" -gt 3 ] || { [ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -ge 11 ]; }; then
     echo "✅ Python $PY_VER"
   else
     echo "❌ Python $PY_VER (需要 >= 3.11)"

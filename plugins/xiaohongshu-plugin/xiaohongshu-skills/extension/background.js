@@ -4,7 +4,7 @@
  * 连接 Python bridge server（ws://localhost:9333），接收命令并执行：
  * - navigate / wait_for_load: chrome.tabs.update + onUpdated
  * - evaluate / has_element 等: chrome.scripting.executeScript (MAIN world)
- * - click / input 等 DOM 操作: chrome.tabs.sendMessage → content.js
+ * - click / input 等 DOM 操作: chrome.scripting.executeScript (MAIN world)
  * - screenshot: chrome.tabs.captureVisibleTab
  * - get_cookies: chrome.cookies.getAll
  */

@@ -448,9 +448,10 @@ def _input_tags(page: Page, content_selector: str, tags: list[str]) -> None:
 
     # 先记录当前段落数（insertParagraph 之前），之后用于精确定位正文最后一段
     # 注意：必须在 insertParagraph 之前记录，否则 para_count_before 会包含新增的 tags 行
-    para_count_before = int(page.evaluate(
-        f'document.querySelector("{content_selector}").querySelectorAll("p").length'
-    ) or 1)
+    raw_count = page.evaluate(
+        f'document.querySelector("{content_selector}")?.querySelectorAll("p").length'
+    )
+    para_count_before = int(raw_count) if raw_count is not None else 0
 
     # 用 evaluate 直接 focus 编辑器、光标移到末尾并换行一次
     # 避免 click_element 因 isTrusted=false 无法真正 focus Quill 编辑器的问题

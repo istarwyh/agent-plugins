@@ -18,16 +18,5 @@
   ],
   "background": {
     "service_worker": "background.js"
-  },
-  "content_scripts": [
-    {
-      "matches": [
-        "https://www.xiaohongshu.com/*",
-        "https://xiaohongshu.com/*",
-        "https://creator.xiaohongshu.com/*"
-      ],
-      "js": ["content.js"],
-      "run_at": "document_idle"
-    }
-  ]
+  }
 }
