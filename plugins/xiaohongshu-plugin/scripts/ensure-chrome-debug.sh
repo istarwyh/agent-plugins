@@ -1,23 +1,29 @@
 #!/bin/bash
-# Ensure Chrome is running with remote debugging enabled.
-# Reuses the user's original Chrome profile via symlinks.
+# Chrome DevTools 兜底脚本
+# 仅在 CLI Extension Bridge 不可用时使用
 #
-# Usage: bash ensure-chrome-debug.sh
-# Exit codes: 0 = ready, 1 = failed
+# 使用方式: bash ensure-chrome-debug.sh
+# 退出码: 0=就绪, 1=失败
+#
+# 注意: 此脚本会重启 Chrome 以启用调试端口。
+# 如果用户正在使用 Extension Bridge 模式，请不要调用此脚本。
 
 PORT=9222
 ORIGINAL_DIR="$HOME/Library/Application Support/Google/Chrome"
 LINKED_DIR="/tmp/chrome-linked-profile"
 
-# Check if already connected
+# Step 1: 如果调试端口已就绪，直接返回
 if curl -s --max-time 2 "http://127.0.0.1:$PORT/json/version" | grep -q '"Browser"'; then
   echo "OK: Chrome debugging already available on port $PORT"
   exit 0
 fi
 
-echo "Chrome debugging not available. Setting up..."
+echo "Chrome debugging not available on port $PORT."
+echo "NOTE: This will restart Chrome (any Extension Bridge connection will be lost)."
+echo "Proceeding in 3 seconds... (Ctrl+C to cancel)"
+sleep 3
 
-# Kill existing Chrome
+# Step 2: 关闭现有 Chrome
 killall -9 "Google Chrome" 2>/dev/null
 sleep 4
 
@@ -29,7 +35,7 @@ if [ "$REMAINING" -gt 0 ]; then
   sleep 3
 fi
 
-# Create symlinked user-data-dir
+# Step 3: 创建 symlinked user-data-dir（复用登录状态）
 if [ -d "$ORIGINAL_DIR" ]; then
   rm -rf "$LINKED_DIR"
   mkdir -p "$LINKED_DIR"
@@ -43,15 +49,13 @@ else
   mkdir -p "$LINKED_DIR"
 fi
 
-# Launch Chrome
-# Note: --remote-allow-origins=* is required to allow WebSocket connections from external tools.
-# Without this flag, Chrome will reject WebSocket handshakes with HTTP 403 Forbidden.
+# Step 4: 启动 Chrome with debugging port
 arch -arm64 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
   --remote-debugging-port=$PORT \
   --user-data-dir="$LINKED_DIR" \
   --remote-allow-origins=* 2>/dev/null &
 
-# Wait for Chrome to be ready (up to 15 seconds)
+# Step 5: 等待就绪（最多 15 秒）
 for i in $(seq 1 15); do
   sleep 1
   if curl -s --max-time 1 "http://127.0.0.1:$PORT/json/version" | grep -q '"Browser"'; then
@@ -61,5 +65,4 @@ for i in $(seq 1 15); do
 done
 
 echo "FAILED: Chrome debugging not available after 15 seconds"
-echo "Check /tmp/chrome_debug_err.log for details"
 exit 1
