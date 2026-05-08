@@ -1,7 +1,7 @@
 ---
-name: env-config
+name: configuring-env
 description: >
-  Claude Code 环境变量配置向导。通过交互式问答，根据用户的身份和使用场景，
+  提供 Claude Code 环境变量配置向导。通过交互式问答，根据用户的身份和使用场景，
   推荐合适的环境变量配置，并使用 update-config 应用到 settings.json。
   当用户提到"环境变量"、"env"、"配置"、"设置"、"proxy"、"代理"、
   "模型切换"、"token"、"缓存"、"成本"、"CI"、"自动化"等关键词时触发。
@@ -43,7 +43,7 @@ description: >
 - ✏️ 我想调整几个
 - ⏭️ 跳过，不需要配置
 
-确认后，调用 `update-config` skill 将环境变量写入 settings.json。
+确认后，调用系统内置的 `update-config` skill 将环境变量写入 settings.json（该 skill 为 Claude Code 内置，无需额外安装）。
 
 ---
 
@@ -54,7 +54,7 @@ description: >
 ```yaml
 # ============================================================
 # Claude Code 环境变量配置目录
-# 版本: 2026-05-08
+# 版本: 1.0.0
 # ============================================================
 
 categories:
@@ -93,31 +93,31 @@ categories:
     variables:
       - name: ANTHROPIC_MODEL
         description: "覆盖所有请求的模型（全局生效）"
-        example: "claude-sonnet-4-20250514"
+        example: "claude-sonnet-4-6"
         tags: [代理用户, 高级用户]
         priority: optional
 
       - name: ANTHROPIC_SMALL_FAST_MODEL
         description: "轻量任务用的模型（摘要、分类等内部任务）"
-        example: "claude-haiku-3.5"
+        example: "claude-haiku-4-5-20251001"
         tags: [高级用户]
         priority: optional
 
       - name: ANTHROPIC_DEFAULT_OPUS_MODEL
         description: "覆盖 Opus 层级模型（深度推理任务）"
-        example: "claude-opus-4-20250514"
+        example: "claude-opus-4-6"
         tags: [代理用户, 高级用户]
         priority: optional
 
       - name: ANTHROPIC_DEFAULT_SONNET_MODEL
         description: "覆盖 Sonnet 层级模型（主力编码任务）"
-        example: "claude-sonnet-4-20250514"
+        example: "claude-sonnet-4-6"
         tags: [代理用户, 高级用户]
         priority: optional
 
       - name: ANTHROPIC_DEFAULT_HAIKU_MODEL
         description: "覆盖 Haiku 层级模型（轻量快速任务）"
-        example: "claude-haiku-3.5-20241022"
+        example: "claude-haiku-4-5-20251001"
         tags: [代理用户, 高级用户]
         priority: optional
 
@@ -413,5 +413,5 @@ CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
 
 如果用户选择不配置，尊重他们的选择。简单说明：
 - Claude Code 有合理的默认值，大多数场景开箱即用
-- 随时可以通过 `/env-config` 重新配置
+- 随时可以通过 `/configuring-env` 重新配置
 - 唯一必须的是 `ANTHROPIC_API_KEY`（如果还没设置的话）
