@@ -108,35 +108,38 @@ Each skill is a self-contained folder with instructions, scripts, and resources 
 
 ### Installing Skills
 
-#### Option 1: Clone the Entire Marketplace
+#### Option 1: One-Line Install (Recommended)
+
+Copy and paste this command to install any plugin directly:
 
 ```bash
-# Clone this repository
-git clone https://github.com/istarwyh/agent-plugins.git
+# Install a specific plugin (e.g. env-config-plugin)
+curl -fsSL https://raw.githubusercontent.com/istarwyh/agent-plugins/master/scripts/install.sh | bash -s -- env-config-plugin
 
-# Copy specific skills to your Claude skills directory
-mkdir -p ~/.claude/skills
-cp -r agent-plugins/google-skill ~/.claude/skills/
+# Or run interactively to choose from a menu
+curl -fsSL https://raw.githubusercontent.com/istarwyh/agent-plugins/master/scripts/install.sh | bash
 ```
 
-#### Option 2: Install Individual Skills
+#### Option 2: Using Claude Code CLI
 
 ```bash
-# Navigate to your Claude skills directory
-cd ~/.claude/skills
+# Add the marketplace (one-time setup)
+claude plugin marketplace add istarwyh/agent-plugins
 
-# Clone a specific skill
-git clone https://github.com/istarwyh/agent-plugins.git temp-repo
-mv temp-repo/google-skill ./google-skill
-rm -rf temp-repo
+# Install a plugin
+claude plugin install env-config-plugin@agent-plugins
 ```
+
+#### Option 3: Using /find-skills in Claude Code
+
+Start Claude Code and type `/find-skills` to discover and install plugins interactively.
 
 ### Using Skills in Claude Code
 
-1. Place skills in `~/.claude/skills/` directory
-2. Start Claude Code: `claude`
+1. Install plugins using one of the methods above
+2. Restart Claude Code: `claude`
 3. Skills load automatically and activate when relevant
-4. Check available skills: "What skills do I have?"
+4. Check installed plugins: `claude plugin list`
 
 ### Using Skills in Claude.ai
 
