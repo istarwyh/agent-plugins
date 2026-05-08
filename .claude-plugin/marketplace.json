@@ -55,6 +55,12 @@
       "description": "Decomposes complex tasks into parallel subtasks and coordinates an Agent Team of teammates. Triggers when user describes a multi-part development task or uses keywords like team/swarm/parallel/拆分/并行.",
       "source": "./plugins/swarm-plugin",
       "category": "productivity-organization"
+    },
+    {
+      "name": "env-config-plugin",
+      "description": "Claude Code environment variable configuration wizard. Interactive guided setup based on user persona (local, proxy, non-Anthropic model, cloud, CI). Optimized for mainland China users.",
+      "source": "./plugins/env-config-plugin",
+      "category": "productivity-organization"
     }
   ]
 }
