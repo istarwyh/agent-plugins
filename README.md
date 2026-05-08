@@ -54,7 +54,6 @@ Each skill is a self-contained folder with instructions, scripts, and resources 
 
 | Skill | Description |
 |-------|-------------|
-| `/meta-skill` | Generate slash commands with semantic versioning, automatic backups, and changelog tracking. Use ... |
 | `/notify-on-complete` | Send system notifications when Claude Code completes tasks. Use when the user wants to configure ... |
 
 ### oss-plugin
