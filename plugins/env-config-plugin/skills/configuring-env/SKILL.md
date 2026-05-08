@@ -23,18 +23,21 @@ description: >
 **问题 1: 你的使用场景是什么？**
 - 🏠 本地直连 Anthropic API（最常见）
 - 🌐 通过 API 代理/中转使用（如 OpenRouter、自建网关）
+- 🤖 使用非 Anthropic 模型（DeepSeek、Qwen、Moonshot 等，通过中转站）
 - ☁️ 通过 AWS Bedrock 或 Google Vertex AI 使用
 - 🔧 CI/CD 或自动化脚本中使用
 
 **问题 2: 你最关心什么？**
 - 💰 成本控制（减少 token 消耗、优化缓存）
-- ⚡ 稳定性（禁用更新、减少干扰）
+- ⚡ 稳定性（连接稳定、禁用干扰）
 - 🚀 性能（大输出、长任务）
 - 🤔 我不确定，你推荐就好
 
 ### Step 2: 根据场景推荐配置
 
 根据用户选择，从下面的 YAML 配置目录中筛选推荐。**只推荐用户需要的变量**，不要一股脑全列出来。
+
+特别注意：如果用户使用非 Anthropic 模型（DeepSeek/Qwen/Moonshot 等），**必须**包含兼容性变量（thinking 相关），否则会报错。
 
 ### Step 3: 确认并应用
 
@@ -54,7 +57,8 @@ description: >
 ```yaml
 # ============================================================
 # Claude Code 环境变量配置目录
-# 版本: 1.0.0
+# 版本: 2.0.0
+# 面向中国大陆用户优化
 # ============================================================
 
 categories:
@@ -64,16 +68,17 @@ categories:
     description: "连接 Anthropic API 的基本配置"
     variables:
       - name: ANTHROPIC_API_KEY
-        description: "Anthropic API 密钥（主要认证方式）"
+        description: "API 密钥。从 Anthropic 官方或中转站获取"
         example: "sk-ant-..."
         tags: [所有场景]
         priority: required
 
       - name: ANTHROPIC_BASE_URL
-        description: "覆盖 API 请求地址（用于代理/网关）"
-        example: "https://your-gateway.example.com"
-        tags: [代理用户]
+        description: "API 端点地址。中国大陆用户通常需要通过中转站访问"
+        example: "https://api.deepseek.com/anthropic"
+        tags: [代理用户, 非Anthropic模型]
         priority: conditional
+        note: "必须是 Anthropic Messages API 兼容端点。部分中转站使用 /anthropic 路径前缀"
 
       - name: ANTHROPIC_AUTH_TOKEN
         description: "Bearer token 认证（配合代理使用）"
@@ -92,16 +97,24 @@ categories:
     description: "覆盖 Claude Code 使用的默认模型"
     variables:
       - name: ANTHROPIC_MODEL
-        description: "覆盖所有请求的模型（全局生效）"
-        example: "claude-sonnet-4-6"
-        tags: [代理用户, 高级用户]
+        description: "覆盖所有请求的主模型 ID"
+        example: "deepseek-chat"
+        tags: [代理用户, 非Anthropic模型, 高级用户]
+        priority: conditional
+        note: "必须是你的 API 端点支持的模型 ID。不同中转站格式不同"
+
+      - name: MODEL
+        description: "模型别名。与 ANTHROPIC_MODEL 二选一，后者优先"
+        example: "deepseek-chat"
+        tags: [代理用户, 非Anthropic模型]
         priority: optional
 
       - name: ANTHROPIC_SMALL_FAST_MODEL
-        description: "轻量任务用的模型（摘要、分类等内部任务）"
-        example: "claude-haiku-4-5-20251001"
-        tags: [高级用户]
-        priority: optional
+        description: "轻量任务用的模型（token 估算、思考摘要等内部任务）"
+        example: "deepseek-chat"
+        tags: [代理用户, 非Anthropic模型, 成本控制]
+        priority: recommended
+        note: "非 Anthropic 用户建议设为便宜模型（如 deepseek-chat），节省后台任务开销"
 
       - name: ANTHROPIC_DEFAULT_OPUS_MODEL
         description: "覆盖 Opus 层级模型（深度推理任务）"
@@ -120,6 +133,61 @@ categories:
         example: "claude-haiku-4-5-20251001"
         tags: [代理用户, 高级用户]
         priority: optional
+
+      - name: CLAUDE_CODE_SUBAGENT_MODEL
+        description: "覆盖子 agent 使用的模型。主模型用强模型、子 agent 用便宜模型可节省成本"
+        example: "deepseek-chat"
+        tags: [成本控制, 高级用户]
+        priority: optional
+
+  # ----------------------------------------------------------
+  - name: "非 Anthropic 模型兼容"
+    description: "使用 DeepSeek/Qwen/Moonshot 等非 Anthropic 模型时必须设置的兼容性变量"
+    variables:
+      - name: CLAUDE_CODE_DISABLE_THINKING
+        description: "关闭扩展思考功能。非 Anthropic 模型不支持 thinking 协议，不设会报错"
+        example: "1"
+        tags: [非Anthropic模型]
+        priority: required
+        note: "DeepSeek、Qwen、Moonshot 等模型均不支持 Anthropic thinking 协议"
+
+      - name: CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING
+        description: "关闭自适应思考切换。非 Anthropic 模型不支持此功能"
+        example: "1"
+        tags: [非Anthropic模型]
+        priority: required
+
+      - name: DISABLE_INTERLEAVED_THINKING
+        description: "关闭交错思考（interleaved thinking）。这是 Claude Code 高效使用工具的核心机制，但非 Anthropic 模型不支持"
+        example: "1"
+        tags: [非Anthropic模型]
+        priority: required
+        note: "不关闭会发送无效的 beta header，导致请求失败"
+
+      - name: DISABLE_PROMPT_CACHING
+        description: "禁用 prompt caching。大多数中转站不支持 Anthropic 缓存协议"
+        example: "1"
+        tags: [非Anthropic模型, 代理用户]
+        priority: conditional
+        note: "不关闭会在请求中包含无效的 cache_control 字段，可能导致报错"
+
+  # ----------------------------------------------------------
+  - name: "推理与思考"
+    description: "控制模型的推理力度和思考深度"
+    variables:
+      - name: CLAUDE_CODE_EFFORT_LEVEL
+        description: "控制模型推理力度。优先级: 环境变量 > 会话 /effort > 模型默认"
+        example: "medium"
+        tags: [所有场景, 成本控制]
+        priority: optional
+        note: "可选值: low（轻量/快/省token）、medium、high（深度推理）、max、unset/auto"
+
+      - name: MAX_THINKING_TOKENS
+        description: "扩展思考的 token 预算。越多推理越深，但消耗越大"
+        example: "10000"
+        tags: [高级用户, 成本控制]
+        priority: optional
+        note: "日常 10000 够用，复杂任务可调到 20000。非 Anthropic 模型无需设置"
 
   # ----------------------------------------------------------
   - name: "云厂商路由"
@@ -163,7 +231,7 @@ categories:
 
   # ----------------------------------------------------------
   - name: "输出与 Token 控制"
-    description: "控制响应长度和思考深度"
+    description: "控制响应长度和上下文"
     variables:
       - name: CLAUDE_CODE_MAX_OUTPUT_TOKENS
         description: "单次最大输出 token 数（复杂任务建议调高）"
@@ -172,11 +240,10 @@ categories:
         tags: [所有场景]
         priority: recommended
 
-      - name: MAX_THINKING_TOKENS
-        description: "深度思考的 token 上限"
-        default: "31999"
-        example: "10000"
-        tags: [高级用户, 成本控制]
+      - name: CLAUDE_CODE_MAX_CONTEXT_TOKENS
+        description: "手动设置上下文窗口 token 上限。当中转站报告的上下文窗口大小不准确时使用"
+        example: "64000"
+        tags: [代理用户, 非Anthropic模型]
         priority: optional
 
       - name: CLAUDE_CODE_MAX_TURNS
@@ -185,6 +252,95 @@ categories:
         example: "50"
         tags: [CI/自动化]
         priority: conditional
+
+  # ----------------------------------------------------------
+  - name: "上下文压缩"
+    description: "控制对话历史的自动压缩行为"
+    variables:
+      - name: DISABLE_AUTO_COMPACT
+        description: "关闭自动上下文压缩。关闭后上下文满时可能导致请求失败"
+        example: "1"
+        tags: [高级用户]
+        priority: optional
+        note: "手动 /compact 命令仍可用"
+
+      - name: CLAUDE_AUTOCOMPACT_PCT_OVERRIDE
+        description: "覆盖自动压缩触发阈值（百分比 0-100）。只能降低阈值（更早触发）"
+        example: "50"
+        tags: [高级用户]
+        priority: optional
+        note: "上下文窗口较小的模型可能需要更早触发压缩"
+
+  # ----------------------------------------------------------
+  - name: "网络代理"
+    description: "HTTP/HTTPS 代理和连接配置"
+    variables:
+      - name: HTTP_PROXY
+        description: "HTTP 代理地址"
+        example: "http://127.0.0.1:7890"
+        tags: [代理用户, 云厂商用户]
+        priority: conditional
+
+      - name: HTTPS_PROXY
+        description: "HTTPS 代理地址"
+        example: "http://127.0.0.1:7890"
+        tags: [代理用户, 云厂商用户]
+        priority: conditional
+
+      - name: NO_PROXY
+        description: "不走代理的地址列表，逗号分隔"
+        example: "localhost,127.0.0.1"
+        tags: [代理用户, 云厂商用户]
+        priority: conditional
+
+      - name: CLAUDE_CODE_PROXY_RESOLVES_HOSTS
+        description: "让代理服务器负责 DNS 解析（SOCKS5 或透明代理时需要开启）"
+        example: "1"
+        tags: [代理用户]
+        priority: optional
+
+      - name: API_TIMEOUT_MS
+        description: "API 请求总超时时间（毫秒）。通过代理连接时延迟较高，建议调大"
+        example: "120000"
+        tags: [代理用户, 非Anthropic模型]
+        priority: recommended
+        note: "建议 120000（2 分钟）或更高"
+
+      - name: SSL_CERT_FILE
+        description: "自定义 CA 证书文件路径。代理使用自签名证书或企业内网 CA 时需要"
+        example: "/path/to/ca-bundle.crt"
+        tags: [代理用户]
+        priority: optional
+
+  # ----------------------------------------------------------
+  - name: "网络稳定性"
+    description: "应对不稳定网络环境的配置"
+    variables:
+      - name: CLAUDE_CODE_MAX_RETRIES
+        description: "API 请求失败后的最大重试次数。代理线路不稳定时调大"
+        example: "5"
+        tags: [代理用户, 非Anthropic模型]
+        priority: recommended
+
+      - name: CLAUDE_STREAM_IDLE_TIMEOUT_MS
+        description: "流式响应空闲超时（毫秒）。超时后连接被强制终止，防止无限挂起"
+        default: "90000"
+        example: "120000"
+        tags: [代理用户]
+        priority: optional
+        note: "需配合 CLAUDE_ENABLE_STREAM_WATCHDOG=1 使用。代理线路质量差时调大"
+
+      - name: CLAUDE_ENABLE_STREAM_WATCHDOG
+        description: "启用流式响应看门狗。开启后 CLAUDE_STREAM_IDLE_TIMEOUT_MS 才生效"
+        example: "1"
+        tags: [代理用户]
+        priority: optional
+
+      - name: CLAUDE_CODE_RESUME_INTERRUPTED_TURN
+        description: "中断后自动恢复对话。网络不稳定时避免会话丢失"
+        example: "1"
+        tags: [代理用户, CI/自动化]
+        priority: optional
 
   # ----------------------------------------------------------
   - name: "Bash 工具"
@@ -233,19 +389,20 @@ categories:
 
   # ----------------------------------------------------------
   - name: "缓存与成本"
-    description: "控制 prompt caching 和请求开销"
+    description: "控制 prompt caching 和费用相关"
     variables:
-      - name: DISABLE_PROMPT_CACHING
-        description: "禁用 prompt caching（调试时使用）"
-        example: "1"
-        tags: [高级用户, 成本控制]
-        priority: optional
-
       - name: CLAUDE_CODE_ATTRIBUTION_HEADER
-        description: "设为 0 可保留代理场景下的缓存命中（代理用户必加）"
+        description: "设为 0 关闭归属头。中转站不识别此头或因此头限流时使用"
         example: "0"
-        tags: [代理用户]
+        tags: [代理用户, 非Anthropic模型]
         priority: conditional
+        note: "归属头包含 cc_version（含指纹），某些中转站可能据此限流"
+
+      - name: DISABLE_COST_WARNINGS
+        description: "隐藏 token 费用警告。中转站定价与 Anthropic 官方不同时费用不准确"
+        example: "1"
+        tags: [代理用户, 非Anthropic模型]
+        priority: recommended
 
   # ----------------------------------------------------------
   - name: "行为开关"
@@ -258,13 +415,13 @@ categories:
         priority: recommended
 
       - name: CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC
-        description: "禁用遥测和非必要网络请求"
+        description: "关闭非必要网络请求（分析、市场检查等）。在 GFW 后可减少连接失败"
         example: "1"
-        tags: [所有场景, 成本控制]
+        tags: [所有场景]
         priority: recommended
 
       - name: CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
-        description: "启用实验性 Agent Teams 功能（需要 iTerm2 + it2）"
+        description: "启用实验性 Agent Teams 功能（多 agent 协作）"
         example: "1"
         tags: [高级用户]
         priority: optional
@@ -288,26 +445,53 @@ categories:
         priority: optional
 
   # ----------------------------------------------------------
-  - name: "网络代理"
-    description: "HTTP/HTTPS 代理配置"
+  - name: "界面与交互"
+    description: "终端渲染和输出风格"
     variables:
-      - name: HTTP_PROXY
-        description: "HTTP 代理地址"
-        example: "http://proxy:8080"
-        tags: [代理用户, 云厂商用户]
-        priority: conditional
+      - name: CLAUDE_CODE_NO_FLICKER
+        description: "开启全屏渲染模式，消除闪烁，支持鼠标滚轮浏览历史"
+        example: "1"
+        tags: [所有场景]
+        priority: optional
+        note: "在 tmux -CC（iTerm2 集成模式）下自动禁用"
 
-      - name: HTTPS_PROXY
-        description: "HTTPS 代理地址"
-        example: "http://proxy:8080"
-        tags: [代理用户, 云厂商用户]
-        priority: conditional
+      - name: CLAUDE_CODE_BRIEF
+        description: "精简输出模式，适合快速查看结果"
+        example: "1"
+        tags: [所有场景]
+        priority: optional
 
-      - name: NO_PROXY
-        description: "不走代理的地址列表"
-        example: "127.0.0.1,localhost"
-        tags: [代理用户, 云厂商用户]
-        priority: conditional
+      - name: CLAUDE_CODE_SYNTAX_HIGHLIGHT
+        description: "控制代码语法高亮。关闭可略微减少渲染开销"
+        example: "0"
+        tags: [高级用户]
+        priority: optional
+
+      - name: CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY
+        description: "关闭使用反馈调查弹窗"
+        example: "1"
+        tags: [所有场景]
+        priority: optional
+
+  # ----------------------------------------------------------
+  - name: "遥测与隐私"
+    description: "控制数据上报和隐私"
+    variables:
+      - name: DISABLE_TELEMETRY
+        description: "关闭所有遥测数据上报"
+        example: "1"
+        tags: [所有场景]
+        priority: recommended
+
+  # ----------------------------------------------------------
+  - name: "配置目录"
+    description: "自定义配置路径"
+    variables:
+      - name: CLAUDE_CONFIG_DIR
+        description: "自定义 Claude Code 配置目录（默认 ~/.claude）"
+        example: "/custom/path/.claude"
+        tags: [高级用户]
+        priority: optional
 
   # ----------------------------------------------------------
   - name: "调试"
@@ -324,7 +508,7 @@ categories:
 
 ## 场景推荐规则
 
-根据用户选择的场景，按以下规则筛选推荐：
+根据用户选择的场景，按以下规则筛选推荐。
 
 ### 场景 A: 本地直连 Anthropic API
 
@@ -334,30 +518,89 @@ ANTHROPIC_API_KEY=<用户填写>
 DISABLE_AUTOUPDATER=1
 CLAUDE_CODE_MAX_OUTPUT_TOKENS=50000
 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+DISABLE_TELEMETRY=1
 ```
 
 可选建议：
-- 如果用户在意成本 → 加 `MAX_THINKING_TOKENS=10000`
+- 如果用户在意成本 → 加 `MAX_THINKING_TOKENS=10000`、`CLAUDE_CODE_EFFORT_LEVEL=low`
 - 如果用户用 pnpm/yarn → 加 `CLAUDE_PACKAGE_MANAGER=pnpm`
+- 如果终端闪烁 → 加 `CLAUDE_CODE_NO_FLICKER=1`
 
-### 场景 B: 通过 API 代理使用
+### 场景 B: 通过 API 代理使用（Anthropic 模型）
 
 推荐配置：
 ```bash
 ANTHROPIC_API_KEY=<用户填写>
 ANTHROPIC_BASE_URL=<代理地址>
-ANTHROPIC_AUTH_TOKEN=<代理 token>
 CLAUDE_CODE_ATTRIBUTION_HEADER=0
 DISABLE_AUTOUPDATER=1
 CLAUDE_CODE_MAX_OUTPUT_TOKENS=50000
 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+DISABLE_TELEMETRY=1
+DISABLE_COST_WARNINGS=1
+API_TIMEOUT_MS=120000
+CLAUDE_CODE_MAX_RETRIES=5
 ```
 
 可选建议：
 - 如果代理支持模型切换 → 加 `ANTHROPIC_MODEL=<模型名>`
+- 如果代理不支持缓存 → 加 `DISABLE_PROMPT_CACHING=1`
+- 如果用 SOCKS5 代理 → 加 `CLAUDE_CODE_PROXY_RESOLVES_HOSTS=1`
+- 如果代理用自签名证书 → 加 `SSL_CERT_FILE=<证书路径>`
 - 如果需要覆盖三个层级 → 加 `ANTHROPIC_DEFAULT_OPUS_MODEL` / `SONNET` / `HAIKU`
+- 如果网络不稳定 → 加 `CLAUDE_STREAM_IDLE_TIMEOUT_MS=120000`、`CLAUDE_ENABLE_STREAM_WATCHDOG=1`、`CLAUDE_CODE_RESUME_INTERRUPTED_TURN=1`
 
-### 场景 C: 通过 AWS Bedrock / Google Vertex AI
+### 场景 C: 使用非 Anthropic 模型（DeepSeek/Qwen/Moonshot 等）
+
+这是中国大陆用户最常见的场景。**必须**包含兼容性变量，否则会报错。
+
+推荐配置：
+```bash
+ANTHROPIC_API_KEY=<用户填写>
+ANTHROPIC_BASE_URL=<中转站地址，如 https://api.deepseek.com/anthropic>
+ANTHROPIC_MODEL=<模型名，如 deepseek-chat>
+ANTHROPIC_SMALL_FAST_MODEL=deepseek-chat
+
+# ── 兼容性（必须）──
+CLAUDE_CODE_DISABLE_THINKING=1
+CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1
+DISABLE_INTERLEAVED_THINKING=1
+DISABLE_PROMPT_CACHING=1
+
+# ── 稳定性 ──
+CLAUDE_CODE_ATTRIBUTION_HEADER=0
+DISABLE_COST_WARNINGS=1
+DISABLE_AUTOUPDATER=1
+CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+DISABLE_TELEMETRY=1
+API_TIMEOUT_MS=120000
+CLAUDE_CODE_MAX_RETRIES=5
+CLAUDE_CODE_MAX_OUTPUT_TOKENS=50000
+```
+
+可选建议：
+- 如果想省成本 → 加 `CLAUDE_CODE_EFFORT_LEVEL=low`、`CLAUDE_CODE_SUBAGENT_MODEL=<便宜模型>`
+- 如果中转站报告的上下文窗口不准 → 加 `CLAUDE_CODE_MAX_CONTEXT_TOKENS=<实际值>`
+- 如果用 SOCKS5 代理 → 加 `CLAUDE_CODE_PROXY_RESOLVES_HOSTS=1`
+- 如果网络不稳定 → 加 `CLAUDE_STREAM_IDLE_TIMEOUT_MS=120000`、`CLAUDE_ENABLE_STREAM_WATCHDOG=1`、`CLAUDE_CODE_RESUME_INTERRUPTED_TURN=1`
+
+**常见中转站参考配置：**
+
+DeepSeek:
+```bash
+ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic
+ANTHROPIC_MODEL=deepseek-chat
+ANTHROPIC_SMALL_FAST_MODEL=deepseek-chat
+```
+
+Moonshot (Kimi):
+```bash
+ANTHROPIC_BASE_URL=https://api.moonshot.cn/anthropic
+ANTHROPIC_MODEL=moonshot-v1-8k
+ANTHROPIC_SMALL_FAST_MODEL=moonshot-v1-8k
+```
+
+### 场景 D: 通过 AWS Bedrock / Google Vertex AI
 
 推荐配置（Bedrock）：
 ```bash
@@ -365,6 +608,7 @@ CLAUDE_CODE_USE_BEDROCK=1
 AWS_REGION=us-east-1
 DISABLE_AUTOUPDATER=1
 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+DISABLE_TELEMETRY=1
 ```
 
 推荐配置（Vertex）：
@@ -374,9 +618,10 @@ CLOUD_ML_REGION=us-east5
 ANTHROPIC_VERTEX_PROJECT_ID=<项目 ID>
 DISABLE_AUTOUPDATER=1
 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+DISABLE_TELEMETRY=1
 ```
 
-### 场景 D: CI/CD 自动化
+### 场景 E: CI/CD 自动化
 
 推荐配置：
 ```bash
@@ -384,11 +629,13 @@ ANTHROPIC_API_KEY=<从 CI secrets 读取>
 CLAUDE_CODE_MAX_TURNS=50
 DISABLE_AUTOUPDATER=1
 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+DISABLE_TELEMETRY=1
 ```
 
 可选建议：
 - 如果任务复杂 → 加 `CLAUDE_CODE_MAX_OUTPUT_TOKENS=50000`
 - 如果需要长命令 → 加 `BASH_DEFAULT_TIMEOUT_MS=300000`
+- 如果网络不稳定 → 加 `CLAUDE_CODE_RESUME_INTERRUPTED_TURN=1`
 
 ---
 
@@ -402,9 +649,20 @@ CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
 | 变量 | 值 | 说明 |
 |------|-----|------|
 | ANTHROPIC_API_KEY | (需要你填写) | API 认证 |
+| ANTHROPIC_BASE_URL | https://api.deepseek.com/anthropic | DeepSeek 中转站 |
+| ANTHROPIC_MODEL | deepseek-chat | 主模型 |
+| CLAUDE_CODE_DISABLE_THINKING | 1 | DeepSeek 不支持 thinking |
+| CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING | 1 | 关闭自适应思考 |
+| DISABLE_INTERLEAVED_THINKING | 1 | 关闭交错思考 |
+| DISABLE_PROMPT_CACHING | 1 | 中转站不支持缓存 |
+| CLAUDE_CODE_ATTRIBUTION_HEADER | 0 | 避免限流 |
+| DISABLE_COST_WARNINGS | 1 | 中转站定价不同 |
 | DISABLE_AUTOUPDATER | 1 | 禁用自动更新 |
-| CLAUDE_CODE_MAX_OUTPUT_TOKENS | 50000 | 防止长输出被截断 |
 | CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC | 1 | 减少网络开销 |
+| DISABLE_TELEMETRY | 1 | 关闭遥测 |
+| API_TIMEOUT_MS | 120000 | 代理延迟较高 |
+| CLAUDE_CODE_MAX_RETRIES | 5 | 不稳定时多重试 |
+| CLAUDE_CODE_MAX_OUTPUT_TOKENS | 50000 | 防止长输出被截断 |
 
 这些会写入 ~/.claude/settings.json 的 env 字段。
 ```
@@ -415,3 +673,4 @@ CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
 - Claude Code 有合理的默认值，大多数场景开箱即用
 - 随时可以通过 `/configuring-env` 重新配置
 - 唯一必须的是 `ANTHROPIC_API_KEY`（如果还没设置的话）
+- 如果使用非 Anthropic 模型，兼容性变量（thinking 相关）是必须的，否则会报错
