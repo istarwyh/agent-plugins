@@ -14,9 +14,6 @@ A curated collection of Claude Code skills and agent plugins for enhanced AI wor
 
 - [What Are Claude Skills?](#what-are-claude-skills)
 - [Available Skills](#available-skills)
-  - [Communication & Writing](#communication--writing)
-  - [Development & Code Tools](#development--code-tools)
-  - [Productivity & Organization](#productivity--organization)
 - [Getting Started](#getting-started)
 - [Creating Skills](#creating-skills)
 - [Contributing](#contributing)
@@ -30,17 +27,80 @@ Each skill is a self-contained folder with instructions, scripts, and resources 
 
 ## Available Skills
 
-### Communication & Writing
+<!-- SKILLS:START -->
+### chrome-fetch-plugin
+> Fetch web page content via Chrome DevTools MCP when WebFetch fails (e.g., 'Unable to verify if domain is safe'), when pages require authentication from the user's Chrome session, or when SPAs need JavaScript rendering. Uses the user's running Chrome browser instance with autoConnect.
 
-*Coming soon - add your skills here!*
+| Skill | Description |
+|-------|-------------|
+| `/chrome-fetch` | Fetch web page content using Chrome DevTools MCP when WebFetch fails, returns domain verification... |
 
-### Development & Code Tools
+### env-config-plugin
+> Claude Code environment variable configuration wizard. Interactive guided setup based on user persona (local, proxy, non-Anthropic model, cloud, CI). Optimized for mainland China users. Maintains a YAML catalog of 60+ env vars with smart recommendations.
 
-*Coming soon - add your skills here!*
+| Skill | Description |
+|-------|-------------|
+| `/configuring-env` | 提供 Claude Code 环境变量配置向导。通过交互式问答，根据用户的身份和使用场景， 推荐合适的环境变量配置，并使用 update-config 应用到 settings.json。 当用... |
 
-### Productivity & Organization
+### gemini-plugin
+> Triggers when user wants to ask Gemini questions, generate text/images via Google Gemini, or mentions 'Gemini'. Provides browser-automated Gemini text generation and image creation with persistent Google authentication.
 
-- [**Google Skill (NotebookLM)**](./google-skill/) - Query Google NotebookLM for source-grounded answers from your documents. Includes Gemini integration, browser automation, and library management.
+| Skill | Description |
+|-------|-------------|
+| `/gemini-skill` | 当用户想通过 Google Gemini 生成文本、生成图片、或提到"Gemini"/"问问Gemini"时触发。支持文本问答和图片创建，使用浏览器自动化与 Gemini 网页交互。 |
+
+### meta-plugin
+> Meta plugin for Claude Code utilities. Includes: 1) Slash command generator with semantic versioning, automatic backups, and changelog tracking; 2) Task completion notifications with cross-platform support (macOS/Linux/Windows).
+
+| Skill | Description |
+|-------|-------------|
+| `/notify-on-complete` | Send system notifications when Claude Code completes tasks. Use when the user wants to configure ... |
+
+### oss-plugin
+> Trigger when the user asks to upload, download, list, delete, sync, or generate signed URLs for files on Alibaba Cloud OSS (Object Storage Service). Operates via Python CLI scripts wrapping the oss2 SDK.
+
+| Skill | Description |
+|-------|-------------|
+| `/oss-skill` | Trigger when the user asks to upload, download, list, delete, or sync files on Alibaba Cloud OSS,... |
+
+### social-autopilot-plugin
+> 极客电商社媒自动化：监控漫威/DC/星战等热点新闻，自动生成Instagram/Facebook帖子并排期发布。支持 /social-autopilot 命令和自然语言触发。
+
+| Skill | Description |
+|-------|-------------|
+| `/social-autopilot` | 当用户要求监控极客新闻(漫威/DC/星战/F1/游戏)、生成社交媒体帖子、 配置Instagram或Facebook自动发布、或提到热点资讯自动化时触发。 |
+
+### swarm-plugin
+> Decomposes complex tasks into parallel subtasks and coordinates an Agent Team of teammates. Triggers when user describes a multi-part development task or uses keywords like team/swarm/parallel/拆分/并行.
+
+| Skill | Description |
+|-------|-------------|
+| `/swarm-skill` | Decompose complex tasks into parallel subtasks and coordinate an Agent Team of teammates to compl... |
+
+### wechat-plugin
+> Generate WeChat official account (微信公众号) cover image layouts as self-contained HTML files. Triggered when user wants to create WeChat cover images, 微信公众号封面, or dual-cover designs (main cover + 朋友圈分享 cover).
+
+| Skill | Description |
+|-------|-------------|
+| `/wechat-cover-layout-designer` | Generate WeChat official account (微信公众号) dual-cover image layouts as self-contained HTML files. U... |
+
+### xiaohongshu-plugin
+> Automate Xiaohongshu (小红书) via Chrome DevTools MCP. Triggered when the user wants to open, log in, browse, search, or interact with Xiaohongshu/小红书. Supports login (QR code or phone number), browsing the feed, searching content, viewing post details, and reading user profiles.
+
+| Skill | Description |
+|-------|-------------|
+| `/post-to-xhs` | 发布内容到小红书，支持图文笔记、视频笔记和长文。自动判断发布类型，校验标题和素材，用户确认后发布。 |
+| `/setup-xhs` | 安装部署小红书自动化环境：Python CLI 引擎 + Chrome 浏览器扩展。 |
+| `/xhs-content-plan` | 小红书内容策划助手：搜索分析热门内容和竞品，帮助规划内容方向、选题、标签策略。 |
+| `/xhs-cover` | 生成小红书封面图（3:4 比例 1080x1440）。上半部分为 AI 主题图片，下半部分为纯色底+标题文字。 |
+| `/xhs-explore` | 浏览小红书推荐流、查看笔记详情和评论。 |
+| `/xhs-interact` | 对小红书笔记进行互动：点赞/取消点赞、收藏/取消收藏、发表评论、回复评论。 |
+| `/xhs-login` | 管理小红书登录状态：检查是否已登录、二维码扫码登录、手机验证码登录、退出登录。 |
+| `/xhs-profile` | 查看小红书用户主页：基本信息、粉丝/关注/获赞数据、发布的笔记列表。 |
+| `/xhs-search` | 搜索小红书笔记，支持关键词搜索和多维度筛选。 |
+| `/xiaohongshu` | 小红书（RED/XHS）自动化助手。通过 Python CLI 引擎 + Chrome 浏览器扩展，提供完整的小红书操作能力：登录、发布图文/视频/长文、搜索笔记、浏览详情、点赞收藏评论、查看博... |
+
+<!-- SKILLS:END -->
 
 ---
 
