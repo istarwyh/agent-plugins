@@ -110,14 +110,8 @@ Each skill is a self-contained folder with instructions, scripts, and resources 
 
 #### Option 1: One-Line Install (Recommended)
 
-Copy and paste this command to install any plugin directly:
-
 ```bash
-# Install a specific plugin (e.g. env-config-plugin)
-curl -fsSL https://raw.githubusercontent.com/istarwyh/agent-plugins/master/scripts/install.sh | bash -s -- env-config-plugin
-
-# Or run interactively to choose from a menu
-curl -fsSL https://raw.githubusercontent.com/istarwyh/agent-plugins/master/scripts/install.sh | bash
+npx skills add istarwyh/agent-plugins
 ```
 
 #### Option 2: Using Claude Code CLI
@@ -129,10 +123,6 @@ claude plugin marketplace add istarwyh/agent-plugins
 # Install a plugin
 claude plugin install env-config-plugin@agent-plugins
 ```
-
-#### Option 3: Using /find-skills in Claude Code
-
-Start Claude Code and type `/find-skills` to discover and install plugins interactively.
 
 ### Using Skills in Claude Code
 
