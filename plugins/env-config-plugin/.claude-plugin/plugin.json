@@ -1,7 +1,7 @@
 {
   "name": "env-config-plugin",
   "description": "Claude Code environment variable configuration wizard. Interactive guided setup based on user persona (local, proxy, non-Anthropic model, cloud, CI). Optimized for mainland China users. Maintains a YAML catalog of 60+ env vars with smart recommendations.",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "author": {
     "name": "xiaohui",
     "email": "talk@xiaohui.cool"
