@@ -1,0 +1,12 @@
+#!/bin/bash
+# Auto-generate README skill catalog before each commit
+
+# Run the generator script
+python3 scripts/generate_readme.py
+
+# Re-stage README if it was modified
+if git diff --quiet README.md 2>/dev/null; then
+  : # No changes
+else
+  git add README.md
+fi
