@@ -1,95 +1,218 @@
 ---
 name: swarm-skill
 description: >
-  Decompose complex tasks into parallel subtasks and coordinate an Agent Team of teammates
-  to complete them concurrently. Use when the user describes a multi-part development task
-  or explicitly requests task splitting, parallelization, or uses keywords like
-  team, swarm, parallel, 拆分, 并行, 分工. Not for single-step tasks
-  (typo fix, single file edit, answering a question).
+  Decompose complex development tasks into a parallel Agent Team, create self-contained
+  teammate tasks, coordinate closed-loop review/test iterations, and summarize delivery.
+  Use whenever the user describes a multi-step development task such as implementing a
+  feature with tests, refactoring multiple modules, researching then implementing, or
+  explicitly asks for team/swarm/parallel/拆分/并行/分工. Do not use for single-step tasks
+  like fixing a typo, reading one file, or answering a simple question.
 ---
 
-# Swarm — Task Decomposition & Parallel Execution
+# Swarm — 智能任务拆分与并行执行
 
-## Environment Check
+把复杂任务拆成多个 teammate 并行完成，由你作为 Team Lead 监控、决策、驱动闭环收敛并交付结果。
+
+## 0. Prerequisites
 
 Run `scripts/check_env.sh` first. Handle by exit code:
 
-- **Exit 0**: Ready. Proceed to skill discovery.
-- **Exit 1**: Version too low. Tell user to run `claude update`. **Stop.**
-- **Exit 2**: Agent Teams not enabled. Read `~/.claude/settings.json`, add `"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"` to the `"env"` object (create if absent, preserve existing config), write back. Tell user to **restart Claude Code**. **Stop.**
+- **Exit 0**: Agent Teams is ready. Continue.
+- **Exit 1**: Claude Code version is too low. Tell the user to run `claude update`. Stop.
+- **Exit 2**: Agent Teams is not enabled. Read `~/.claude/settings.json`, add `"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"` to the `env` object, preserve existing config, write back, then tell the user to restart Claude Code. Stop.
 
-## Skill Discovery
+BMAD skills are an optional accelerator, not a hard dependency:
 
-Build the available skill inventory from two sources:
+- If BMAD skills are present, inject the relevant BMAD skill names into teammate prompts.
+- If BMAD is absent, tell the user they can install it with `npx bmad-method install` for stronger architect/reviewer/tester roles.
+- If the user does not want to install BMAD now, continue anyway by dynamically writing high-quality teammate instructions for the role.
+- If the user has other equivalent skills installed, prefer those instead of BMAD.
 
-1. **Session skills**: Parse the `<system-reminder>` in current context for listed skills (name + description).
-2. **Filesystem commands**: Run `scripts/discover_skills.sh` to scan `~/.claude/commands/` and `.claude/commands/`.
+## 1. Skill Discovery
 
-Merge into a flat list. Only use skills that actually appear — never assume.
+Build the available skill inventory from both sources:
 
-> Teammates auto-load the same skills as the lead. No extra config needed.
+1. **Session skills**: parse the current `<system-reminder>` skill list.
+2. **Filesystem commands**: run `scripts/discover_skills.sh` to scan `~/.claude/commands/` and `.claude/commands/`.
 
-## Workflow
+Only inject skills that actually exist. Never assume a skill is installed just because it appears in examples.
 
-```
-Check env → Discover skills → Decompose → Create team + tasks → Spawn teammates → Monitor → Deliver
-```
+Read `references/patterns.md` when you need role-to-skill matching, prompt templates, tester strategy, or review-loop details.
 
-### 1. Decompose
-
-Analyze the user's request. Split into subtasks that can run in parallel or pipeline.
-
-**Split when:** parallelizable, different expertise, or pipelineable.
-**Don't split:** tightly coupled edits, single-file changes, heavy shared context.
-
-See [references/patterns.md](references/patterns.md) for decomposition patterns and role-to-skill matching.
-
-### 2. Create Team & Tasks
-
-Create an Agent Team, then create Tasks. Each Task must be self-contained: clear goal, file paths, completion criteria, project conventions (from CLAUDE.md).
-
-Use `addBlockedBy` for dependencies — blocked teammates wait automatically.
-
-### 3. Spawn Teammates
-
-You **MUST** use the `Agent` tool to spawn teammates. You **MUST NOT** implement code directly in the main session — all implementation work **MUST** be delegated to Agent teammates.
-
-**How to spawn — concrete tool call:**
+## 2. Core Workflow
 
 ```
-Agent({
-  description: "Short summary of this teammate's job",
-  prompt: "Full prompt using the template from references/patterns.md",
-  run_in_background: true
-})
+用户需求 → 分析拆分 → 创建 Team + Tasks → 启动 Teammates → 监控协调 → 汇总交付
 ```
 
-**Parallelism rules:**
+For typical development work, default to the full closed-loop pipeline:
 
-1. Spawn all independent teammates in a **single message** (multiple Agent tool calls in one response). Do NOT spawn them one by one.
-2. Dependent teammates also spawn immediately — they self-wait via `addBlockedBy`.
-3. All teammates **MUST** use `run_in_background: true`.
+```
+需求理解/澄清
+  ↓
+设计阶段: architect → reviewer → update design → review again until clean
+  ↓
+实现阶段: developer → code reviewer → fix code → review again until clean
+  ↓
+测试阶段: tester → fix failures → test again until passing
+  ↓
+交付: summarize, optionally commit/push/PR if user requested
+```
 
-Build prompts using the template in [references/patterns.md](references/patterns.md#teammate-prompt-template). Only inject actually-discovered skills.
+Each phase has a gate. Do not enter the next phase until the gate is clean:
 
-**Agent type:** default (omit `subagent_type`) for code, `"Explore"` for research, `"Plan"` for design.
+| Transition | Gate |
+|------------|------|
+| Design → Implementation | reviewer finds no new accepted BLOCKER/WARNING in the latest design artifact |
+| Implementation → Test | code review finds no new accepted issue in the latest code |
+| Test → Delivery | all required tests pass |
 
-See [references/patterns.md](references/patterns.md#full-agent-call-example) for a complete end-to-end example.
+Design artifacts are the single source of truth. If design review finds a problem, update the design artifact and review the updated design again. Do not treat design findings as an implementation TODO list.
 
-### 4. Monitor & Coordinate
+The closed-loop pipeline says **what** phases must happen and when they can exit. The Phase 1-9 sections say **how** to execute those phases with tasks, teammates, monitoring, and delivery.
 
-- Verify output on completion; SendMessage corrections if needed
-- Resolve conflicts if two teammates edit the same file
-- On failure: analyze cause, guide retry via SendMessage
+Common gate violations to avoid:
 
-### 5. Commit (optional)
+- Do not turn reviewer findings into an implementation TODO list while leaving the design artifact stale.
+- Do not enter implementation after a design BLOCKER/WARNING until the design artifact is updated and reviewed again.
+- Do not skip re-review because the fix looks small.
+- After receiving review findings, remember you are still inside the current phase loop until the gate passes.
+- Do not ask the user whether to enter the next phase when the gate itself defines readiness.
 
-Create a **committer** teammate `addBlockedBy` all dev/test tasks.
-Inject commit skill if discovered; otherwise use git directly.
-See [references/patterns.md](references/patterns.md#committer-prompt-with-commit-skill) for prompt templates.
+## 3. Team Lead Responsibilities
 
-### 6. Deliver
+You are the Team Lead.
 
-1. Run tests to verify changes
-2. Summarize each teammate's output to the user
-3. Shut down teammates and clean up the team
+| Phase | Responsibility | Mode |
+|-------|----------------|------|
+| Analysis / task creation / spawn | Decompose, create tasks, write prompts, spawn teammates | Proactive |
+| Monitoring / review loops | Wait for teammate output, evaluate findings, coordinate fixes | Responsive |
+| Validation / delivery | Verify tests, summarize outputs, clean up | Proactive |
+
+Key decision rules:
+
+- Do **not** directly implement the user's requested code in the main session; delegate implementation to teammates.
+- Evaluate reviewer findings independently. Accept, reject, downgrade, or upgrade findings with reasons.
+- Resolve conflicts between teammates.
+- Ask the user when a decision is genuinely ambiguous, scope-changing, business-specific, or requires external authorization.
+- Do not guess, skip, or silently choose on uncertain technical choices, business logic, or finding severity downgrades.
+- Drive each phase to convergence; the exit condition is clean review/tests, not Team Lead intuition.
+
+## 4. Decompose
+
+Split when work is parallelizable, requires distinct expertise, or forms a useful pipeline. Do not split tightly coupled single-file edits or tiny changes.
+
+Good default teammate count is 2-4. More than 5 usually costs more coordination than it saves.
+
+Common patterns:
+
+| Pattern | Teammates | Dependency |
+|---------|-----------|------------|
+| Full development loop | architect → design-reviewer → developer → code-reviewer → tester | gated chain |
+| Dev + Test | developer → tester | tester blocked by developer unless using acceptance-test strategy |
+| Research + Implement | researcher → developer | developer blocked by researcher |
+| Multi-module | module-a + module-b + reviewer/tester | modules parallel, review/test after |
+| Docs sync | developer + doc-writer → reviewer | docs can often run parallel |
+
+## 5. Create Team and Tasks
+
+If Agent Teams tools are available, create a team first, then create one Task per teammate. If only Task tools are available in the current harness, use the available Task tools and Agent teammates without a separate TeamCreate call.
+
+Each Task must be self-contained:
+
+- Goal and expected artifact.
+- Relevant file paths and project context.
+- Completion criteria.
+- Dependencies via `addBlockedBy`.
+- Project conventions from CLAUDE.md.
+- For Python projects, tell teammates to use `.venv/bin/python` instead of bare `python`/`python3`.
+
+## 6. Spawn Teammates
+
+You **MUST** use the `Agent` tool to spawn teammates. All teammates use `run_in_background: true`.
+
+Spawn all independent teammates in a single assistant message with multiple Agent calls. Dependent teammates may also be spawned immediately; they should wait on blocked tasks.
+
+Before every spawn, write this visible checklist in the response text:
+
+```markdown
+Checklist:
+- [x] Skill injection: {role} → {discovered skill or dynamic instructions}
+- [x] Self-contained context: {files, goal, acceptance criteria included}
+- [x] Project conventions: CLAUDE.md requirements embedded
+- [x] Agent type: {needs file writes? general-purpose : Explore/Plan}
+- [x] Permissions: {default local / needs user confirmation for external or git push}
+```
+
+Agent type selection:
+
+| Need | Agent type |
+|------|------------|
+| Writes or edits files, including design/review docs | default/general-purpose |
+| Read-only search or codebase exploration | `subagent_type: "Explore"` |
+| Planning only and no file output | `subagent_type: "Plan"` |
+
+If unsure, use default/general-purpose.
+
+Use the template and mapping in `references/patterns.md` to write prompts. Non-developer teammates should receive either discovered role skills or explicit dynamic role instructions.
+
+## 7. Monitor and Iterate
+
+When teammates complete:
+
+1. Inspect their output.
+2. Decide whether the phase gate passes.
+3. If not, create/update the needed task and send the responsible teammate a correction prompt if the harness supports continuing agents; otherwise spawn a new teammate with the correction context.
+4. Repeat until the phase gate passes.
+
+When teammates are blocked, idle, or interrupted:
+
+- If blocked, check whether the blocking task is truly incomplete; unblock only by completing or correcting the dependency.
+- If idle after completion, clean up or leave it alone depending on available harness controls.
+- If interrupted, resume with explicit context if the harness supports continuation; otherwise spawn a replacement teammate.
+- If the harness lacks team shutdown or message-continuation tools, document the state and proceed with available Task/Agent tools.
+
+Review loop:
+
+- Reviewer findings are inputs to Team Lead decision-making, not automatic commands.
+- Accepted design findings must be written back to the design artifact before another design review.
+- Accepted code findings must be fixed by developer before another code review.
+- Accepted test failures must be fixed and tested again.
+
+If a teammate fails, diagnose the cause and provide corrective instructions. If teammates conflict on the same file, resolve the conflict explicitly.
+
+## 8. Commit / Push / PR
+
+Only commit, push, or create a PR if the user requested it or explicitly approves it.
+
+For delivery with git:
+
+- Create a committer teammate blocked by all dev/review/test tasks.
+- Inject an available commit/push skill if discovered.
+- If no commit skill exists, instruct the committer to follow the repository's git workflow and ask before push.
+- External or shared-state actions require user confirmation.
+- If an Agent permission mode feature exists, use the safest interactive/default mode for committers; do not assume a tool parameter exists unless it is available in the current schema.
+
+## 9. Deliver
+
+At the end:
+
+1. Run or verify the relevant tests.
+2. Summarize each teammate's output.
+3. Note any limitations, skipped optional skills, or user decisions.
+4. Clean up idle teammates/team if the harness provides cleanup tools.
+
+Use this summary format:
+
+```markdown
+所有任务完成。
+
+| Teammate | 任务 | 产出 |
+|----------|------|------|
+| architect | 设计方案 | ... |
+| developer | 实现代码 | ... |
+| tester | 测试验证 | ... |
+
+验证：...
+注意事项：...
+```

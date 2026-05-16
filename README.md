@@ -75,7 +75,7 @@ Each skill is a self-contained folder with instructions, scripts, and resources 
 
 | Skill | Description |
 |-------|-------------|
-| `/swarm-skill` | Decompose complex tasks into parallel subtasks and coordinate an Agent Team of teammates to compl... |
+| `/swarm-skill` | Decompose complex development tasks into a parallel Agent Team, create self-contained teammate ta... |
 
 ### wechat-plugin
 > Generate WeChat official account (微信公众号) cover image layouts as self-contained HTML files. Triggered when user wants to create WeChat cover images, 微信公众号封面, or dual-cover designs (main cover + 朋友圈分享 cover).
