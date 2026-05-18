@@ -3,7 +3,8 @@ import json
 import shutil
 from pathlib import Path
 
-from common import WORK_DIR, SKILL_DIR, DEFAULT_CONFIG, ensure_dirs
+from common import WORK_DIR, SKILL_DIR, DEFAULT_CONFIG, ensure_dirs, load_context
+from channels.xiaohongshu import check_login_status
 
 ENV_EXAMPLE = SKILL_DIR / ".env.example"
 
@@ -20,7 +21,7 @@ def main(args: list[str] = None):
     print("=" * 50)
 
     # 1. Create work directory
-    print(f"\n[1/4] 创建工作目录: {WORK_DIR}")
+    print(f"\n[1/5] 创建工作目录: {WORK_DIR}")
     if opts.dry_run:
         print("  [DRY-RUN] 跳过")
     else:
@@ -29,7 +30,7 @@ def main(args: list[str] = None):
 
     # 2. Create .env
     env_path = WORK_DIR / ".env"
-    print(f"\n[2/4] 配置文件: {env_path}")
+    print(f"\n[2/5] 配置文件: {env_path}")
     if env_path.exists():
         print("  ✓ .env 已存在，跳过")
     elif opts.dry_run:
@@ -41,7 +42,7 @@ def main(args: list[str] = None):
 
     # 3. Create config.json
     config_path = WORK_DIR / "config.json"
-    print(f"\n[3/4] RSS源配置: {config_path}")
+    print(f"\n[3/5] RSS源配置: {config_path}")
     if config_path.exists():
         print("  ✓ config.json 已存在，跳过")
     elif opts.dry_run:
@@ -53,7 +54,7 @@ def main(args: list[str] = None):
         print("  ✓ 已写入默认配置（漫威/DC/星战/F1/游戏）")
 
     # 4. Check dependencies
-    print("\n[4/4] 检查依赖")
+    print("\n[4/5] 检查依赖")
     missing = []
     for pkg in ["feedparser", "openai", "pydantic", "dotenv", "loguru"]:
         try:
@@ -73,6 +74,23 @@ def main(args: list[str] = None):
         print("  然后: python -m playwright install chromium")
     else:
         print("  ✓ 所有依赖已安装")
+
+    # 5. Check channels
+    print("\n[5/5] 检查发布渠道")
+    ctx = load_context(dry_run=True)
+    print(f"  Meta: {'✓ 已配置 Token' if ctx.meta_token else '✗ 未配置 Token'}")
+    xhs_status = check_login_status(check_login=not opts.dry_run)
+    if xhs_status.state == "missing":
+        print("  Xiaohongshu: ✗ 未安装")
+        for line in xhs_status.message.splitlines():
+            print(f"    {line}")
+    elif xhs_status.state == "logged_in":
+        print("  Xiaohongshu: ✓ 已安装且已登录")
+    elif xhs_status.state == "detected":
+        print(f"  Xiaohongshu: ✓ 已检测到 CLI ({xhs_status.cli_path})")
+        print("    运行 /setup-xhs 和 /xhs-login 完成首次配置")
+    else:
+        print(f"  Xiaohongshu: ⚠ {xhs_status.message}")
 
     # Summary
     print("\n" + "=" * 50)

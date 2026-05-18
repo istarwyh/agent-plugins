@@ -138,7 +138,13 @@ def main(args: list[str] = None):
 
     with get_db(ctx.db_path) as conn:
         rows = conn.execute(
-            "SELECT * FROM post_drafts WHERE status = 'pending' ORDER BY created_at ASC LIMIT 10"
+            """
+            SELECT * FROM post_drafts
+            WHERE status = 'pending'
+              AND lower(COALESCE(platform, 'instagram')) IN ('instagram', 'meta', 'facebook')
+            ORDER BY created_at ASC
+            LIMIT 10
+            """
         ).fetchall()
 
     if not rows:

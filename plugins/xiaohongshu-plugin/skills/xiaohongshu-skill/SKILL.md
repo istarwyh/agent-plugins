@@ -44,13 +44,14 @@ python3 {baseDir}/../../xiaohongshu-skills/scripts/cli.py check-login
 3. **用户确认**：发布、评论等写操作执行前展示内容让用户确认
 4. **参数来源**：`feed_id` 和 `xsec_token` 必须从搜索或浏览结果中获取，不可编造
 5. **内容质量优先**：发布和策划时参考 `{baseDir}/../../references/` 中的创作规范
+6. **发布排障优先**：发布失败或超时时先查 `{baseDir}/../../references/publish-troubleshooting.md`，未确认失败前不要重试
 
 ## CLI 兜底（Chrome DevTools MCP）
 
-当 CLI 命令失败（Extension 未连接/bridge 错误/超时），自动切换到浏览器直接操作：
+当 CLI 命令失败（Extension 未连接/bridge 错误/超时），读操作可直接切换到浏览器；发布类操作先确认没有提交成功，再切换到浏览器直接操作：
 
 ```bash
 bash {baseDir}/../../scripts/ensure-chrome-debug.sh
 ```
 
-然后使用 `navigate_page`、`take_snapshot`、`click`、`fill`、`evaluate_script` 等 Chrome DevTools 工具。参考 `{baseDir}/../../references/web-structure.md` 和 `{baseDir}/../../references/workflow.md`。
+然后使用 `navigate_page`、`take_snapshot`、`click`、`fill`、`evaluate_script` 等 Chrome DevTools 工具。参考 `{baseDir}/../../references/web-structure.md`、`{baseDir}/../../references/workflow.md` 和 `{baseDir}/../../references/publish-troubleshooting.md`。

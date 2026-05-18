@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 
 from common import WORK_DIR, load_context, init_db, get_db
+from channels.xiaohongshu import check_login_status
 
 
 def main(args: list[str] = None):
@@ -31,11 +32,21 @@ def main(args: list[str] = None):
     db_path = WORK_DIR / "data" / "news.db"
     if db_path.exists():
         try:
+            init_db(db_path)
             with get_db(db_path) as conn:
                 news_count = conn.execute("SELECT COUNT(*) FROM processed_news").fetchone()[0]
+                brief_count = conn.execute("SELECT COUNT(*) FROM content_briefs").fetchone()[0]
                 draft_count = conn.execute("SELECT COUNT(*) FROM post_drafts").fetchone()[0]
                 pending = conn.execute("SELECT COUNT(*) FROM post_drafts WHERE status='pending'").fetchone()[0]
                 scheduled = conn.execute("SELECT COUNT(*) FROM post_drafts WHERE status='scheduled'").fetchone()[0]
+                platform_rows = conn.execute(
+                    """
+                    SELECT COALESCE(platform, 'instagram') AS platform, status, COUNT(*) AS count
+                    FROM post_drafts
+                    GROUP BY COALESCE(platform, 'instagram'), status
+                    ORDER BY platform, status
+                    """
+                ).fetchall()
 
                 last_run = conn.execute(
                     "SELECT * FROM run_log ORDER BY run_at DESC LIMIT 1"
@@ -43,7 +54,12 @@ def main(args: list[str] = None):
 
             print(f"\n数据库:")
             print(f"  已处理新闻: {news_count}")
+            print(f"  内容简报: {brief_count}")
             print(f"  帖子草稿: {draft_count} (待发布: {pending}, 已排期: {scheduled})")
+            if platform_rows:
+                print("  按渠道/状态:")
+                for row in platform_rows:
+                    print(f"    - {row['platform']}/{row['status']}: {row['count']}")
 
             if last_run:
                 print(f"\n最近一次运行:")
@@ -74,15 +90,36 @@ def main(args: list[str] = None):
     print(f"  帖子草稿: {len(draft_files)} 个")
     print(f"  卡片图片: {len(card_files)} 个")
 
-    # 4. API status
-    print(f"\nAPI配置:")
+    # 4. API and channel status
+    print(f"\nAPI与渠道配置:")
     try:
         ctx = load_context(dry_run=True)
+        channels = ctx.config.get("channels", {})
+        meta_cfg = channels.get("meta", {})
+        xhs_cfg = channels.get("xiaohongshu", {})
         print(f"  OpenAI Key: {'✓ 已配置' if ctx.openai_key else '✗ 未配置'}")
         print(f"  OpenAI Model: {ctx.openai_model}")
+        print(f"  Meta Enabled: {'✓ 是' if meta_cfg.get('enabled') else '✗ 否'}")
+        print(f"  Meta Mode: {meta_cfg.get('mode', 'facebook_only')}")
         print(f"  Meta Page ID: {'✓ 已配置' if ctx.meta_page_id else '✗ 未配置'}")
         print(f"  Meta Token: {'✓ 已配置' if ctx.meta_token else '✗ 未配置'}")
         print(f"  Instagram ID: {'✓ 已配置' if ctx.meta_ig_id else '✗ 未配置'}")
+        print(f"  Xiaohongshu Enabled: {'✓ 是' if xhs_cfg.get('enabled') else '✗ 否'}")
+        print(f"  Xiaohongshu Publish Mode: {xhs_cfg.get('publish_mode', 'draft')}")
+        print(f"  Xiaohongshu Visibility: {xhs_cfg.get('visibility', '公开可见')}")
+        xhs_status = check_login_status(check_login=True, timeout=15)
+        if xhs_status.state == "missing":
+            print("  Xiaohongshu CLI: ✗ 未安装")
+            print("    安装: npx skills add istarwyh/agent-plugins")
+            print("    或: claude plugin install xiaohongshu-plugin@agent-plugins")
+        elif xhs_status.state == "logged_in":
+            print(f"  Xiaohongshu CLI: ✓ 已检测 ({xhs_status.cli_path})")
+            print("  Xiaohongshu Login: ✓ 已登录")
+        elif xhs_status.state == "not_logged_in":
+            print(f"  Xiaohongshu CLI: ✓ 已检测 ({xhs_status.cli_path})")
+            print("  Xiaohongshu Login: ✗ 未登录，请运行 /xhs-login")
+        else:
+            print(f"  Xiaohongshu CLI: ⚠ {xhs_status.message}")
     except Exception:
         print("  ⚠ 无法加载配置")
 

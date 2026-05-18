@@ -6,7 +6,7 @@
 |------|------|---------|
 | `ModuleNotFoundError: No module named 'feedparser'` | 依赖未安装 | `python -m pip install -r requirements.txt` |
 | `playwright._impl._errors.Error: Executable doesn't exist` | Playwright浏览器未安装 | `python -m playwright install chromium` |
-| `RuntimeError: 缺少环境变量: ANTHROPIC_API_KEY` | .env 未配置 | 编辑 `~/social-autopilot/.env` 填入 API Key |
+| `RuntimeError: 缺少环境变量: OPENAI_API_KEY` | .env 未配置 | 编辑 `~/social-autopilot/.env` 填入 OpenAI-compatible API Key |
 | `FileNotFoundError: config.json` | 首次运行未初始化 | 运行 `python scripts/run.py setup.py` |
 
 ## RSS 抓取
@@ -22,7 +22,7 @@
 
 | 问题 | 原因 | 解决方案 |
 |------|------|---------|
-| "LLM调用错误: 401" | API Key 无效 | 检查 ANTHROPIC_API_KEY 是否正确 |
+| "LLM调用错误: 401" | API Key 无效 | 检查 OPENAI_API_KEY 是否正确 |
 | "LLM调用错误: 429" | 配额用尽 | 等待配额重置或升级计划 |
 | "JSON解析失败" | LLM 返回非JSON | 自动重试3次；通常第2次成功 |
 | "相关性不足" | 新闻与电商无关 | 正常过滤；可降低 MIN_RELEVANCE_SCORE |
@@ -43,6 +43,16 @@
 | "Token状态: 无效" | Token 已过期 | 重新获取 Page Token（参考 SETUP_GUIDE.md 第3~5步） |
 | "Facebook排期失败: 403" | 权限不足 | 检查 Token 是否有 pages_manage_posts 权限 |
 | "容器处理失败" | Instagram 图片URL无法访问 | 确保图片URL是公开可访问的 |
+
+## 小红书渠道
+
+| 问题 | 原因 | 解决方案 |
+|------|------|---------|
+| "小红书渠道未检测到 xiaohongshu-plugin" | 未安装小红书插件 | 按根 README 运行 `npx skills add istarwyh/agent-plugins`，或安装 `xiaohongshu-plugin@agent-plugins` |
+| "小红书未登录" | 浏览器会话未登录 | 运行 `/xhs-login` |
+| "小红书环境检查失败" | Chrome Bridge 或扩展异常 | 运行 `/setup-xhs` |
+| "缺少可用图片" | 小红书图文至少需要 1 张图片 | 先运行卡片生成，或使用 `/xhs-cover` 生成封面 |
+| 发布超时或结果不确定 | 小红书页面可能已提交但 CLI 未返回 | 先查 `xiaohongshu-plugin/references/publish-troubleshooting.md`，确认个人主页没有笔记后再重试 |
 
 ## 定时任务
 

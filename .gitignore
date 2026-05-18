@@ -26,6 +26,7 @@ scripts/*.pyc
 .env
 *.env
 .env.*
+!plugins/social-autopilot-plugin/skills/social-autopilot/.env.example
 
 # Browser/Auth state (if accidentally placed outside data/)
 browser_state/

@@ -1,6 +1,7 @@
 import json
 import os
 import sqlite3
+from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -10,7 +11,7 @@ from loguru import logger
 WORK_DIR = Path.home() / "social-autopilot"
 SKILL_DIR = Path(__file__).resolve().parent.parent
 
-REQUIRED_VARS = ["OPENAI_API_KEY"]
+REQUIRED_VARS = []
 
 DEFAULT_CONFIG = {
     "sources": [
@@ -98,7 +99,21 @@ DEFAULT_CONFIG = {
             "brand_color": "#7B2FBE",
             "tags_seed": ["#gamer", "#gaming", "#playstation", "#xbox"],
         },
-    ]
+    ],
+    "channels": {
+        "meta": {
+            "enabled": True,
+            "mode": "facebook_only",
+            "require_confirmation": True,
+        },
+        "xiaohongshu": {
+            "enabled": False,
+            "publish_mode": "draft",
+            "visibility": "公开可见",
+            "require_confirmation": True,
+            "tags": ["极客资讯", "漫威", "DC", "星球大战", "游戏"],
+        },
+    },
 }
 
 SQL_SCHEMA = """
@@ -113,8 +128,25 @@ CREATE TABLE IF NOT EXISTS processed_news (
 );
 CREATE INDEX IF NOT EXISTS idx_pn_source ON processed_news(source_id);
 
+CREATE TABLE IF NOT EXISTS content_briefs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    news_url TEXT UNIQUE NOT NULL,
+    news_title TEXT,
+    category TEXT NOT NULL,
+    source_id TEXT,
+    relevance_score REAL,
+    facts TEXT,
+    angle TEXT,
+    product_tie_in TEXT,
+    image_direction TEXT,
+    base_tags TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_cb_news_url ON content_briefs(news_url);
+
 CREATE TABLE IF NOT EXISTS post_drafts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    brief_id INTEGER,
     news_url TEXT NOT NULL,
     news_title TEXT,
     category TEXT NOT NULL,
@@ -122,7 +154,9 @@ CREATE TABLE IF NOT EXISTS post_drafts (
     hashtags TEXT NOT NULL,
     image_suggestion TEXT,
     cta TEXT,
-    platform TEXT DEFAULT 'instagram',
+    platform TEXT DEFAULT 'meta',
+    platform_title TEXT,
+    platform_payload TEXT,
     status TEXT DEFAULT 'pending',
     relevance_score REAL,
     card_path TEXT,
@@ -195,14 +229,51 @@ def load_context(dry_run: bool = False) -> AppContext:
 def load_config() -> dict:
     config_path = WORK_DIR / "config.json"
     if config_path.exists():
-        return json.loads(config_path.read_text())
-    return DEFAULT_CONFIG
+        return _merge_defaults(json.loads(config_path.read_text()), DEFAULT_CONFIG)
+    return deepcopy(DEFAULT_CONFIG)
+
+
+def _merge_defaults(config: dict, defaults: dict) -> dict:
+    merged = deepcopy(defaults)
+    for key, value in config.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = _merge_defaults(value, merged[key])
+        else:
+            merged[key] = value
+    return merged
+
+
+def get_channel_config(config: dict, channel: str) -> dict:
+    return config.get("channels", {}).get(channel, {})
+
+
+def get_enabled_channels(config: dict) -> list[str]:
+    return [
+        name for name, channel_config in config.get("channels", {}).items()
+        if channel_config.get("enabled", False)
+    ]
 
 
 def init_db(db_path: Path):
     db_path.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(db_path) as conn:
         conn.executescript(SQL_SCHEMA)
+        migrate_db(conn)
+
+
+def migrate_db(conn: sqlite3.Connection):
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(post_drafts)").fetchall()}
+    migrations = {
+        "brief_id": "ALTER TABLE post_drafts ADD COLUMN brief_id INTEGER",
+        "platform_title": "ALTER TABLE post_drafts ADD COLUMN platform_title TEXT",
+        "platform_payload": "ALTER TABLE post_drafts ADD COLUMN platform_payload TEXT",
+    }
+    for column, statement in migrations.items():
+        if column not in columns:
+            conn.execute(statement)
+
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_pd_brief_id ON post_drafts(brief_id)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_pd_platform_status ON post_drafts(platform, status)")
 
 
 def get_db(db_path: Path) -> sqlite3.Connection:
@@ -213,5 +284,5 @@ def get_db(db_path: Path) -> sqlite3.Connection:
 
 
 def ensure_dirs():
-    for sub in ["data", "output/news", "output/drafts", "output/cards", "logs"]:
+    for sub in ["data", "output/news", "output/drafts", "output/cards", "output/xiaohongshu", "logs"]:
         (WORK_DIR / sub).mkdir(parents=True, exist_ok=True)

@@ -74,14 +74,16 @@ take_snapshot → 找到正文输入区域 → fill 或 type_text
 take_snapshot → 找到"发布"按钮 → click
 ```
 
+如果页面找不到普通按钮但存在 `<xhs-publish-btn>`，按 `{baseDir}/../../references/publish-troubleshooting.md` 的 XHS-PUB-003 处理。
+
 10. **验证成功**
 ```javascript
 // evaluate_script
 () => {
+  const text = document.body ? document.body.innerText : '';
   const url = window.location.href;
   return {
-    // URL 会跳转到 publish/success 路径（不是 published=true）
-    published: url.includes('/success') || url.includes('published=true'),
+    success: url.includes('/publish/success') || text.includes('发布成功'),
     currentUrl: url
   };
 }
@@ -198,40 +200,34 @@ editor.dispatchEvent(new ClipboardEvent('paste', {
 }));
 ```
 
-### React 按钮点击（发布按钮等）
+### 发布按钮点击
 
-小红书的按钮使用 React 合成事件系统。普通 `element.click()` 或 `Input.dispatchMouseEvent` 有时无法触发 React 事件处理器。可靠方式是通过 React Fiber 树直接调用 onClick：
+优先查找普通发布按钮：
 
 ```javascript
-(function() {
-    var buttons = document.querySelectorAll('button');
-    for (var i = 0; i < buttons.length; i++) {
-        if (buttons[i].textContent.trim() === '发布' && buttons[i].className.includes('bg-red')) {
-            var btn = buttons[i];
-            // 方式1：直接 click（大部分情况有效）
-            btn.click();
-            return 'Clicked';
-        }
-    }
-})();
+(() => {
+  const btn = Array.from(document.querySelectorAll('button.bg-red, button.ce-btn.bg-red'))
+    .find(el => el.textContent.trim() === '发布');
+  if (!btn) return { ok: false, reason: 'button not found' };
+  btn.click();
+  return { ok: true, mode: 'button' };
+})()
 ```
 
-如果 `click()` 不生效，尝试通过 Fiber 树调用：
+新版发布页可能只暴露 `<xhs-publish-btn>`，真实按钮在 closed Shadow DOM。找不到普通按钮但存在自定义元素时，对宿主元素派发发布事件：
+
 ```javascript
-var fiberKey = Object.keys(btn).find(key =>
-    key.startsWith('__reactFiber$') || key.startsWith('__reactInternalInstance$')
-);
-if (fiberKey) {
-    var fiber = btn[fiberKey];
-    while (fiber) {
-        if (fiber.memoizedProps && fiber.memoizedProps.onClick) {
-            fiber.memoizedProps.onClick();
-            return 'Called React onClick';
-        }
-        fiber = fiber.return;
-    }
-}
+(() => {
+  const btn = document.querySelector('xhs-publish-btn');
+  if (!btn) return { ok: false, reason: 'xhs-publish-btn not found' };
+  if (btn.getAttribute('submit-disabled') === 'true') return { ok: false, reason: 'disabled' };
+  btn.scrollIntoView({ block: 'center' });
+  btn.dispatchEvent(new CustomEvent('publish', { bubbles: true, composed: true }));
+  return { ok: true, mode: 'custom-element' };
+})()
 ```
+
+更多失败信号和处理顺序见 `{baseDir}/../../references/publish-troubleshooting.md`。
 
 ### CDP 文件上传（不依赖 MCP 工具）
 

@@ -87,8 +87,8 @@
 **发布编辑页**：
 - `input[placeholder*="标题"]` — 标题输入框（≤20 字）
 - 正文预览区域
-- "发布" 按钮（class 含 `bg-red`）
-- 发布成功标志：URL 跳转到 `publish/success` 路径，页面显示"发布成功"
+- "发布" 按钮：优先查 `button.bg-red`/`button.ce-btn.bg-red`，新版可能封装为 `<xhs-publish-btn>`
+- 发布成功标志：URL 跳转到 `publish/success` 路径，或页面显示"发布成功"
 - 标题输入需用 `nativeInputValueSetter` 模式（React 状态管理）
 
 ### 自定义封面上传流程

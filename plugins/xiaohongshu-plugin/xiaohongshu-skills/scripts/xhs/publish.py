@@ -20,13 +20,11 @@ from .selectors import (
     ORIGINAL_SWITCH,
     ORIGINAL_SWITCH_CARD,
     POPOVER,
-    PUBLISH_BUTTON,
     SCHEDULE_SWITCH,
     TAG_FIRST_ITEM,
     TAG_TOPIC_CONTAINER,
     TITLE_INPUT,
     TITLE_MAX_SUFFIX,
-    UPLOAD_CONTENT,
     UPLOAD_INPUT,
     VISIBILITY_DROPDOWN,
     VISIBILITY_OPTIONS,
@@ -118,25 +116,60 @@ def click_publish_button(page: Page) -> None:
     clicked = page.evaluate(
         """
         (() => {
-            // 找文本内容精确为"发布"的 bg-red 按钮（排除"发布笔记"等）
-            const btns = document.querySelectorAll('button.bg-red');
+            // 找文本内容精确为"发布"的按钮（排除"发布笔记"等）
+            const btns = document.querySelectorAll('button.bg-red, button.ce-btn.bg-red');
             for (const btn of btns) {
                 const span = btn.querySelector('span');
                 const text = (span ? span.textContent : btn.textContent).trim();
                 if (text === '发布') {
                     btn.scrollIntoView({block: 'center'});
                     btn.click();
-                    return true;
+                    return 'button';
                 }
             }
-            return false;
+
+            const customBtn = document.querySelector('xhs-publish-btn');
+            if (customBtn) {
+                if (customBtn.getAttribute('submit-disabled') === 'true') return 'disabled';
+                customBtn.scrollIntoView({block: 'center'});
+                customBtn.dispatchEvent(new CustomEvent('publish', {
+                    bubbles: true,
+                    composed: true,
+                }));
+                return 'custom-element';
+            }
+
+            return '';
         })()
         """
     )
+    if clicked == "disabled":
+        raise PublishError("发布按钮不可用，请检查图片、标题、正文或页面校验提示")
     if not clicked:
         raise PublishError("未找到发布按钮")
-    time.sleep(3)
+
+    if not _wait_for_publish_success(page):
+        raise PublishError(
+            "已触发发布动作，但未检测到发布成功页；请先检查主页或当前页面，避免重复发布"
+        )
     logger.info("发布完成")
+
+
+def _wait_for_publish_success(page: Page, timeout: float = 30.0) -> bool:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        success = page.evaluate(
+            """
+            (() => {
+                const text = document.body ? document.body.innerText : '';
+                return location.href.includes('/publish/success') || text.includes('发布成功');
+            })()
+            """
+        )
+        if success:
+            return True
+        time.sleep(1)
+    return False
 
 
 def save_as_draft(page: Page) -> None:
@@ -183,43 +216,67 @@ def _click_publish_tab(page: Page, tab_name: str) -> None:
         found = page.evaluate(
             f"""
             (() => {{
-                // 策略1: 查找 div.creator-tab（过滤隐藏元素）
+                // 策略1: 查找 div.creator-tab（过滤隐藏元素和透明副本）
                 let tabs = document.querySelectorAll({json.dumps(CREATOR_TAB)});
                 for (const tab of tabs) {{
                     const titleSpan = tab.querySelector('span.title');
-                    const tabText = titleSpan ? titleSpan.textContent.trim() : tab.textContent.trim();
+                    const tabText = titleSpan
+                        ? titleSpan.textContent.trim()
+                        : tab.textContent.trim();
                     if (tabText === {json.dumps(tab_name)}) {{
-                        const rect = tab.getBoundingClientRect();
                         const style = window.getComputedStyle(tab);
-                        // 跳过隐藏或被移出视口的元素
+                        const opacity = Number.parseFloat(style.opacity || '1');
+                        let rect = tab.getBoundingClientRect();
                         if (rect.width === 0 || rect.height === 0) continue;
                         if (rect.left < 0 || rect.top < 0) continue;
                         if (style.display === 'none' || style.visibility === 'hidden') continue;
+                        if (opacity < 0.5) continue;
+
+                        tab.scrollIntoView({{block: 'center', inline: 'center'}});
+                        rect = tab.getBoundingClientRect();
                         const x = rect.left + rect.width / 2;
                         const y = rect.top + rect.height / 2;
                         const target = document.elementFromPoint(x, y);
-                        if (target === tab || tab.contains(target)) {{
-                            tab.click();
-                            return 'clicked';
-                        }}
-                        return 'blocked';
+                        const clickTarget = target && (target === tab || tab.contains(target))
+                            ? target
+                            : tab;
+                        const eventTypes = [
+                            'pointerdown',
+                            'mousedown',
+                            'pointerup',
+                            'mouseup',
+                            'click',
+                        ];
+                        eventTypes.forEach((type) => {{
+                            clickTarget.dispatchEvent(new MouseEvent(type, {{
+                                bubbles: true,
+                                cancelable: true,
+                                clientX: x,
+                                clientY: y,
+                                view: window,
+                            }}));
+                        }});
+                        return 'clicked';
                     }}
                 }}
-                
+
                 // 策略2: 查找任意包含目标文本的元素
                 const allElements = document.querySelectorAll('*');
                 for (const el of allElements) {{
-                    if (el.children.length === 0 && el.textContent.trim() === {json.dumps(tab_name)}) {{
+                    const text = el.textContent.trim();
+                    if (el.children.length === 0 && text === {json.dumps(tab_name)}) {{
                         const rect = el.getBoundingClientRect();
                         const style = window.getComputedStyle(el);
+                        const opacity = Number.parseFloat(style.opacity || '1');
                         if (rect.width === 0 || rect.height === 0) continue;
                         if (rect.left < 0 || rect.top < 0) continue;
                         if (style.display === 'none' || style.visibility === 'hidden') continue;
+                        if (opacity < 0.5) continue;
                         el.click();
                         return 'clicked';
                     }}
                 }}
-                
+
                 return 'not_found';
             }})()
             """

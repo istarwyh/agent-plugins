@@ -71,11 +71,11 @@ Each skill is a self-contained folder with instructions, scripts, and resources 
 | `/oss-skill` | Trigger when the user asks to upload, download, list, delete, or sync files on Alibaba Cloud OSS,... |
 
 ### social-autopilot-plugin
-> 极客电商社媒自动化：监控漫威/DC/星战等热点新闻，自动生成Instagram/Facebook帖子并排期发布。支持 /social-autopilot 命令和自然语言触发。
+> 极客电商社媒自动化：监控漫威/DC/星战等热点新闻，自动生成 Instagram/Facebook/小红书 多渠道帖子并生成草稿或排期发布。支持 /social-autopilot 命令和自然语言触发。
 
 | Skill | Description |
 |-------|-------------|
-| `/social-autopilot` | 当用户要求监控极客新闻(漫威/DC/星战/F1/游戏)、生成社交媒体帖子、 配置Instagram或Facebook自动发布、或提到热点资讯自动化时触发。 |
+| `/social-autopilot` | 当用户要求监控极客新闻(漫威/DC/星战/F1/游戏)、生成社交媒体帖子、 配置Instagram/Facebook/小红书/XHS/RED发布渠道、做多渠道社媒自动化、 |
 
 ### swarm-plugin
 > Decomposes complex tasks into parallel subtasks and coordinates an Agent Team of teammates. Triggers when user describes a multi-part development task or uses keywords like team/swarm/parallel/拆分/并行.

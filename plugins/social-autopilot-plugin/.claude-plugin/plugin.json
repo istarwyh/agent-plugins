@@ -1,6 +1,6 @@
 {
   "name": "social-autopilot-plugin",
-  "description": "极客电商社媒自动化：监控漫威/DC/星战等热点新闻，自动生成Instagram/Facebook帖子并排期发布。支持 /social-autopilot 命令和自然语言触发。",
+  "description": "极客电商社媒自动化：监控漫威/DC/星战等热点新闻，自动生成 Instagram/Facebook/小红书 多渠道帖子并生成草稿或排期发布。支持 /social-autopilot 命令和自然语言触发。",
   "version": "1.0.0",
   "author": {
     "name": "e-commerce-bot",

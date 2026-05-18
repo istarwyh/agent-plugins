@@ -8,6 +8,8 @@ description: |
 
 CLI 路径：`python3 {baseDir}/../../xiaohongshu-skills/scripts/cli.py`
 
+排障入口：发布失败时先查 `{baseDir}/../../references/publish-troubleshooting.md`，按“登录 → 填表 → 图片上传 → 发布按钮 → 成功页验证”分段定位；无法确认发布结果时不要连续重试。
+
 ## 输入判断
 
 - 提供了视频文件 → 视频笔记（`fill-publish-video`）
@@ -134,11 +136,11 @@ python3 {baseDir}/../../xiaohongshu-skills/scripts/cli.py click-publish
 | 标题超长 | 提示用户缩短标题 |
 | 图片路径无效 | 提示检查路径是否为绝对路径 |
 | CLI 失败（Extension 未连接） | 自动切换到 Chrome DevTools MCP 兜底 |
-| CLI 超时 | 重试一次，仍失败则切换兜底 |
+| CLI 超时或发布结果不确定 | 先按 `publish-troubleshooting.md` 检查当前页面或个人主页；未确认失败前不要重试，避免重复笔记 |
 
 ## 兜底（Chrome DevTools MCP）
 
-CLI 失败时，按 `{baseDir}/../../references/workflow.md` 的 SOP 执行：
+CLI 失败时，先按 `{baseDir}/../../references/publish-troubleshooting.md` 判断是否已提交；确认未发布后，再按 `{baseDir}/../../references/workflow.md` 的 SOP 执行：
 
 ```bash
 bash {baseDir}/../../scripts/ensure-chrome-debug.sh
@@ -149,6 +151,7 @@ bash {baseDir}/../../scripts/ensure-chrome-debug.sh
 ## 参考资料
 
 - 发布 SOP：`{baseDir}/../../references/workflow.md`
+- 发布排障经验库：`{baseDir}/../../references/publish-troubleshooting.md`
 - 页面结构：`{baseDir}/../../references/web-structure.md`
 - 标题规范：`{baseDir}/../../references/title-guide.md`
 - 正文规范：`{baseDir}/../../references/content-guide.md`

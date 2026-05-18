@@ -8,6 +8,7 @@ SCRIPTS = {
     "generate_posts.py": "generate_posts",
     "generate_card.py": "generate_card",
     "schedule_meta.py": "schedule_meta",
+    "publish_channels.py": "publish_channels",
     "install_cron.py": "install_cron",
     "status.py": "status",
     "pipeline": "pipeline",
@@ -15,8 +16,8 @@ SCRIPTS = {
 
 
 def run_pipeline(args: list[str]):
-    """Run full pipeline: poll → generate posts → generate cards → schedule."""
-    from common import load_context, init_db, ensure_dirs
+    """Run full pipeline: poll → generate posts → generate cards → publish channels."""
+    from common import load_context, init_db, ensure_dirs, get_db
 
     dry_run = "--dry-run" in args
     ctx = load_context(dry_run=dry_run)
@@ -38,28 +39,42 @@ def run_pipeline(args: list[str]):
     drafts = gen.main(pass_args)
 
     if not drafts:
-        print("未生成帖子，流程结束。")
+        print("未生成帖子。")
+        if dry_run:
+            _run_publish_stage(pass_args)
+            print("\n=== 流程完成 ===")
+        else:
+            print("流程结束。")
         return
 
-    print(f"\n=== 第3步: 生成卡片图 ({len(drafts)} 条帖子) ===")
+    print(f"\n=== 第3步: 生成卡片图 ({len(drafts)} 条平台草稿) ===")
     card = importlib.import_module("generate_card")
+    seen = set()
     for draft in drafts:
-        card.generate_single_card(
-            title=draft.news_title,
+        key = draft.brief_id or draft.news_url
+        if key in seen:
+            continue
+        seen.add(key)
+        card_path = card.generate_single_card(
+            title=draft.platform_title or draft.news_title,
             category=draft.category,
             brand_color=_get_brand_color(ctx, draft.category),
             output_dir=ctx.work_dir / "output" / "cards",
             dry_run=ctx.dry_run,
         )
+        if card_path:
+            _update_card_path(get_db, ctx, draft, card_path)
 
-    if ctx.meta_token and not ctx.dry_run:
-        print(f"\n=== 第4步: Meta排期 ===")
-        sched = importlib.import_module("schedule_meta")
-        sched.main(pass_args)
-    else:
-        print("\n=== Meta排期已跳过（未配置Token或dry-run模式）===")
+    _run_publish_stage(pass_args)
 
     print("\n=== 流程完成 ===")
+
+
+def _run_publish_stage(pass_args: list[str]):
+    print("\n=== 第4步: 渠道发布/草稿生成 ===")
+    publisher = importlib.import_module("publish_channels")
+    publisher.main(["--enabled", *pass_args])
+
 
 
 def _get_brand_color(ctx, category: str) -> str:
@@ -67,6 +82,20 @@ def _get_brand_color(ctx, category: str) -> str:
         if source["category"] == category:
             return source.get("brand_color", "#333333")
     return "#333333"
+
+
+def _update_card_path(get_db, ctx, draft, card_path: Path):
+    with get_db(ctx.db_path) as conn:
+        if draft.brief_id:
+            conn.execute(
+                "UPDATE post_drafts SET card_path=? WHERE brief_id=? AND status='pending'",
+                (str(card_path), draft.brief_id),
+            )
+        else:
+            conn.execute(
+                "UPDATE post_drafts SET card_path=? WHERE news_url=? AND status='pending'",
+                (str(card_path), draft.news_url),
+            )
 
 
 def main():

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 import hashlib
@@ -19,28 +19,39 @@ class NewsItem(BaseModel):
         return hashlib.sha256(url.encode()).hexdigest()
 
 
-class PostDraft(BaseModel):
+class ContentBrief(BaseModel):
+    id: Optional[int] = None
     news_url: str
     news_title: str
     category: str
-    caption: str = Field(description="PT-BR caption, <=150 words")
-    hashtags: list[str] = Field(description="Exactly 20 hashtags")
+    source_id: str = ""
+    relevance_score: float = Field(default=0.0, ge=0, le=1)
+    facts: list[str] = Field(default_factory=list)
+    angle: str = ""
+    product_tie_in: str = ""
+    image_direction: str = ""
+    base_tags: list[str] = Field(default_factory=list)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class PostDraft(BaseModel):
+    brief_id: Optional[int] = None
+    news_url: str
+    news_title: str
+    category: str
+    caption: str
+    hashtags: list[str]
     image_suggestion: str = ""
     cta: str = ""
-    platform: str = "instagram"
+    platform: str = "meta"
+    platform_title: Optional[str] = None
+    platform_payload: Optional[dict] = None
     status: str = "pending"
     relevance_score: float = Field(default=0.0, ge=0, le=1)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     scheduled_at: Optional[datetime] = None
     card_path: Optional[str] = None
     meta_post_id: Optional[str] = None
-
-    @field_validator("hashtags")
-    @classmethod
-    def check_hashtags(cls, v):
-        if len(v) != 20:
-            raise ValueError(f"Need 20 hashtags, got {len(v)}")
-        return v
 
 
 class RunResult(BaseModel):
