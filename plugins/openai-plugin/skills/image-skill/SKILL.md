@@ -1,15 +1,30 @@
 ---
 name: image-skill
-description: Use this skill whenever the user wants to generate an image with the OpenAI CLI, mentions OpenAI-compatible image generation, gpt-image-2, cliproxyapi, sk-local-gemini, or asks to test image generation through a local OpenAI CLI proxy. This skill captures the reliable workflow for creating PNG images without dumping base64 output into the terminal.
+description: Use this skill whenever the user wants to generate an image with the OpenAI CLI, mentions OpenAI-compatible image generation, gpt-image-2, cliproxyapi, sk-local-gemini, or asks to test image generation through a local OpenAI CLI proxy. This skill captures the reliable workflow for creating PNG images, remembering the provider after the first successful generation, and avoiding dumped base64 output.
 ---
 
 # OpenAI CLI Image Skill
 
 Generate images with the local `openai` CLI and save the returned base64 image to a file.
 
-## First-Use Provider Question
+## Default Provider Memory
 
-On the first use in a conversation or task, ask the user which provider to use unless they already specified it.
+Provider choice is sticky after the first successful image generation.
+
+Before asking the user, check for a saved default provider:
+
+```bash
+DEFAULT_PROVIDER_FILE="${OPENAI_IMAGE_PROVIDER_FILE:-$HOME/.claude/openai-plugin/image-skill-provider.json}"
+test -f "$DEFAULT_PROVIDER_FILE" && cat "$DEFAULT_PROVIDER_FILE"
+```
+
+If the file exists and the user did not explicitly request a different provider, use that saved provider as the default. Mention it briefly, for example:
+
+```text
+使用已记录的默认 provider：cliproxyapi。
+```
+
+If the file does not exist, ask the user which provider to use unless they already specified it.
 
 Recommended short question:
 
@@ -17,7 +32,37 @@ Recommended short question:
 这次图片生成用哪个 provider？如果用本机 cliproxyapi，我会默认使用 sk-local-gemini、http://127.0.0.1:8317/v1 和 gpt-image-2。
 ```
 
-After the provider is known, continue using that provider for the current task unless the user changes it.
+After an image is generated and the output file is verified, write the provider to the default provider file. Do this only after success so a failed provider is not remembered.
+
+For `cliproxyapi`, record the complete local defaults:
+
+```bash
+DEFAULT_PROVIDER_FILE="${OPENAI_IMAGE_PROVIDER_FILE:-$HOME/.claude/openai-plugin/image-skill-provider.json}"
+mkdir -p "$(dirname "$DEFAULT_PROVIDER_FILE")"
+cat > "$DEFAULT_PROVIDER_FILE" <<'JSON'
+{
+  "provider": "cliproxyapi",
+  "api_key": "sk-local-gemini",
+  "base_url": "http://127.0.0.1:8317/v1",
+  "model": "gpt-image-2",
+  "size": "1024x1024"
+}
+JSON
+```
+
+For other providers, prefer storing an environment variable name instead of a raw API key:
+
+```json
+{
+  "provider": "custom-openai-compatible",
+  "api_key_env": "OPENAI_API_KEY",
+  "base_url": "https://example.com/v1",
+  "model": "image-model-name",
+  "size": "1024x1024"
+}
+```
+
+Do not store a real provider API key on disk unless the user explicitly asks for that. If the user changes provider, overwrite the default provider file after the next successful generation.
 
 ## Provider Defaults
 
