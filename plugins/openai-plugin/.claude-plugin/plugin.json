@@ -1,7 +1,7 @@
 {
   "name": "openai-plugin",
   "description": "Generate images through the local OpenAI CLI against OpenAI-compatible providers. Includes cliproxyapi defaults for the local gpt-image-2 proxy on port 8317.",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "author": {
     "name": "openai-cli-image",
     "email": ""
