@@ -18,6 +18,7 @@ description: >
 3. 安装 Playwright 浏览器: `python -m playwright install chromium`
 4. 复制 `.env.example` 到 `~/social-autopilot/.env` 并填入 `OPENAI_API_KEY`
 5. 如需 Meta 渠道，配置 Meta API；如需小红书渠道，安装并登录 `xiaohongshu-plugin`
+6. 如需 AI 图片生成，安装 `openai-plugin` 并使用 `/image-skill`
 
 ## 命令
 
@@ -26,7 +27,8 @@ description: >
 | 首次配置 | `python scripts/run.py setup.py` |
 | 抓取新闻 | `python scripts/run.py poll_news.py --priority high` |
 | 生成帖子 | `python scripts/run.py generate_posts.py` |
-| 生成卡片图 | `python scripts/run.py generate_card.py --title "标题" --category marvel` |
+| AI 图片生成 | 优先调用 `/image-skill`，缺失时提示安装 `openai-plugin` |
+| 模板卡片图 | `python scripts/run.py generate_card.py --title "标题" --category marvel` |
 | Meta排期 | `python scripts/run.py schedule_meta.py --mode facebook_only` |
 | 小红书渠道预览 | `python scripts/run.py publish_channels.py --channel xiaohongshu --dry-run` |
 | 发布全部启用渠道 | `python scripts/run.py publish_channels.py --enabled` |
@@ -41,13 +43,33 @@ description: >
 
 1. 运行 `python scripts/run.py setup.py` 创建 `~/social-autopilot/` 目录结构和配置文件。
 2. 配置 LLM API Key：编辑 `~/social-autopilot/.env`，填入 `OPENAI_API_KEY`。
-3. 配置发布渠道：
+3. 检查 AI 图片生成能力：优先使用 `/image-skill`；如果不可用，按根 README 安装 `openai-plugin`。
+4. 配置发布渠道：
    - Meta：参考 `SETUP_GUIDE.md` 完成 Meta App 和 Token 配置。
    - 小红书：先安装 `xiaohongshu-plugin`，再运行 `/setup-xhs` 和 `/xhs-login`。
-4. 试运行验证：`python scripts/run.py pipeline --dry-run`。
-5. 按需安装定时任务：`python scripts/run.py install_cron.py`。
+5. 试运行验证：`python scripts/run.py pipeline --dry-run`。
+6. 按需安装定时任务：`python scripts/run.py install_cron.py`。
 
 如果用户尚未配置任何发布渠道，全链路终点为生成草稿（JSON + 卡片图），用户可手动发布。
+
+## AI 图片生成
+
+当用户要生成新闻配图、封面、海报、视觉素材或明确要求“用图片生成 LLM”时，优先调用 `/image-skill`，不要只用本 skill 的 HTML 模板截图。`generate_card.py` 只是模板卡片 fallback，适合没有图片模型时生成可用占位卡片。
+
+如果 `/image-skill` 不可用，提示用户按根 README 安装：
+
+```bash
+npx skills add istarwyh/agent-plugins
+```
+
+或使用 Claude Code 插件市场：
+
+```bash
+claude plugin marketplace add istarwyh/agent-plugins
+claude plugin install openai-plugin@agent-plugins
+```
+
+安装后重启 Claude Code，再继续生成图片。
 
 ## 小红书渠道
 
@@ -89,8 +111,9 @@ XHS_CLI_PATH=/absolute/path/to/xiaohongshu-skills/scripts/cli.py
 
 1. 运行 `python scripts/run.py pipeline`。
 2. 向用户报告结果：抓取 X 条新闻、生成 Y 条帖子、各渠道处理 Z 条。
-3. 展示生成的帖子草稿、卡片路径和目标渠道供用户预览。
-4. 如用户要求修改，直接编辑 `~/social-autopilot/output/drafts/` 中的 JSON 或重新生成。
+3. 需要 AI 配图时调用 `/image-skill` 生成图片；如果未安装，先提示用户安装 `openai-plugin`。
+4. 展示生成的帖子草稿、卡片路径和目标渠道供用户预览。
+5. 如用户要求修改，直接编辑 `~/social-autopilot/output/drafts/` 中的 JSON 或重新生成。
 
 ## 多渠道配置
 
@@ -134,5 +157,5 @@ XHS_CLI_PATH=/absolute/path/to/xiaohongshu-skills/scripts/cli.py
 
 - `SETUP_GUIDE.md` — Meta API 全流程配置引导
 - `references/channels/xiaohongshu.md` — 小红书渠道配置和发布约束
-- `references/card-design.md` — 新闻卡片设计规范
+- `references/card-design.md` — 新闻卡片设计规范和 `/image-skill` 配合方式
 - `references/troubleshooting.md` — 常见问题排查

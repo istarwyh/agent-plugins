@@ -1,9 +1,9 @@
 import argparse
+import importlib.util
 import json
 import shutil
-from pathlib import Path
 
-from common import WORK_DIR, SKILL_DIR, DEFAULT_CONFIG, ensure_dirs, load_context
+from common import WORK_DIR, SKILL_DIR, DEFAULT_CONFIG, ensure_dirs, find_openai_image_skill, load_context
 from channels.xiaohongshu import check_login_status
 
 ENV_EXAMPLE = SKILL_DIR / ".env.example"
@@ -62,9 +62,7 @@ def main(args: list[str] = None):
         except ImportError:
             missing.append(pkg)
 
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError:
+    if importlib.util.find_spec("playwright") is None:
         missing.append("playwright")
 
     if missing:
@@ -74,6 +72,14 @@ def main(args: list[str] = None):
         print("  然后: python -m playwright install chromium")
     else:
         print("  ✓ 所有依赖已安装")
+
+    image_skill_path = find_openai_image_skill()
+    if image_skill_path:
+        print(f"  OpenAI 图片 skill: ✓ 已检测 ({image_skill_path})")
+    else:
+        print("  OpenAI 图片 skill: ✗ 未安装，AI 图片生成需要 /image-skill")
+        print("    安装: npx skills add istarwyh/agent-plugins")
+        print("    或: claude plugin install openai-plugin@agent-plugins")
 
     # 5. Check channels
     print("\n[5/5] 检查发布渠道")
@@ -96,8 +102,8 @@ def main(args: list[str] = None):
     print("\n" + "=" * 50)
     print("配置完成! 下一步:")
     print(f"  1. 编辑 {env_path} 填入 API Key")
-    print(f"  2. 运行测试: python scripts/run.py pipeline --dry-run")
-    print(f"  3. 正式运行: python scripts/run.py pipeline")
+    print("  2. 运行测试: python scripts/run.py pipeline --dry-run")
+    print("  3. 正式运行: python scripts/run.py pipeline")
     print("=" * 50)
 
 

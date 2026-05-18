@@ -34,6 +34,7 @@
 | "Playwright 未安装" | 缺少 playwright 包 | `pip install playwright && python -m playwright install chromium` |
 | 卡片文字显示异常 | Google Fonts 加载失败 | 检查网络连接；Playwright 需要联网加载字体 |
 | 图片全黑或空白 | HTML 模板问题 | 检查 templates/news_card.html 是否完整 |
+| `/image-skill` 不可用 | 未安装 openai-plugin | 按根 README 运行 `npx skills add istarwyh/agent-plugins`，或安装 `openai-plugin@agent-plugins` |
 
 ## Meta 排期
 

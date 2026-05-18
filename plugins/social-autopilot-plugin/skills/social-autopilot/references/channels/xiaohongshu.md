@@ -8,6 +8,7 @@
 - `/setup-xhs` — 安装 Python CLI 引擎和 Chrome 扩展
 - `/xhs-login` — 检查/完成登录
 - `/post-to-xhs` — 发布图文、视频、长文
+- `/image-skill` — 使用图片生成 LLM 生成新闻配图或封面主体图
 - `/xhs-cover` — 生成 1080x1440 小红书封面
 
 ## 安装方式
@@ -44,6 +45,7 @@ XHS_CLI_PATH=/absolute/path/to/xiaohongshu-skills/scripts/cli.py
 - 图文笔记至少需要 1 张图片。
 - 图片和视频不能混用。
 - 正文段落用空行分隔。
+- 需要 AI 图片时优先调用 `/image-skill`；缺失时按根 README 安装 `openai-plugin`。
 - 发布前展示标题、正文、标签、图片路径和可见范围。
 - 默认只填入发布页，不自动点击发布。
 - 发布超时或结果不确定时，先查 `xiaohongshu-plugin/references/publish-troubleshooting.md` 并确认个人主页状态，未确认失败前不要重试。

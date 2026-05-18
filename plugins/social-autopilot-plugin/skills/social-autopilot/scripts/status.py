@@ -1,10 +1,8 @@
 import argparse
 import json
 import sqlite3
-from datetime import datetime
-from pathlib import Path
 
-from common import WORK_DIR, load_context, init_db, get_db
+from common import WORK_DIR, find_openai_image_skill, load_context, init_db, get_db
 from channels.xiaohongshu import check_login_status
 
 
@@ -52,7 +50,7 @@ def main(args: list[str] = None):
                     "SELECT * FROM run_log ORDER BY run_at DESC LIMIT 1"
                 ).fetchone()
 
-            print(f"\n数据库:")
+            print("\n数据库:")
             print(f"  已处理新闻: {news_count}")
             print(f"  内容简报: {brief_count}")
             print(f"  帖子草稿: {draft_count} (待发布: {pending}, 已排期: {scheduled})")
@@ -62,7 +60,7 @@ def main(args: list[str] = None):
                     print(f"    - {row['platform']}/{row['status']}: {row['count']}")
 
             if last_run:
-                print(f"\n最近一次运行:")
+                print("\n最近一次运行:")
                 print(f"  时间: {last_run['run_at']}")
                 print(f"  抓取: {last_run['news_fetched']}, 新增: {last_run['news_new']}")
                 print(f"  生成帖子: {last_run['posts_created']}")
@@ -74,7 +72,7 @@ def main(args: list[str] = None):
         except sqlite3.OperationalError:
             print("\n数据库: 表未初始化")
     else:
-        print(f"\n数据库: 不存在 (首次运行时自动创建)")
+        print("\n数据库: 不存在 (首次运行时自动创建)")
 
     # 3. Output files
     news_dir = WORK_DIR / "output" / "news"
@@ -85,13 +83,13 @@ def main(args: list[str] = None):
     draft_files = list(drafts_dir.glob("drafts_*.json")) if drafts_dir.exists() else []
     card_files = list(cards_dir.glob("card_*.png")) if cards_dir.exists() else []
 
-    print(f"\n输出文件:")
+    print("\n输出文件:")
     print(f"  新闻JSON: {len(news_files)} 个")
     print(f"  帖子草稿: {len(draft_files)} 个")
     print(f"  卡片图片: {len(card_files)} 个")
 
     # 4. API and channel status
-    print(f"\nAPI与渠道配置:")
+    print("\nAPI与渠道配置:")
     try:
         ctx = load_context(dry_run=True)
         channels = ctx.config.get("channels", {})
@@ -99,6 +97,13 @@ def main(args: list[str] = None):
         xhs_cfg = channels.get("xiaohongshu", {})
         print(f"  OpenAI Key: {'✓ 已配置' if ctx.openai_key else '✗ 未配置'}")
         print(f"  OpenAI Model: {ctx.openai_model}")
+        image_skill_path = find_openai_image_skill()
+        if image_skill_path:
+            print(f"  OpenAI Image Skill: ✓ 已检测 ({image_skill_path})")
+        else:
+            print("  OpenAI Image Skill: ✗ 未安装")
+            print("    安装: npx skills add istarwyh/agent-plugins")
+            print("    或: claude plugin install openai-plugin@agent-plugins")
         print(f"  Meta Enabled: {'✓ 是' if meta_cfg.get('enabled') else '✗ 否'}")
         print(f"  Meta Mode: {meta_cfg.get('mode', 'facebook_only')}")
         print(f"  Meta Page ID: {'✓ 已配置' if ctx.meta_page_id else '✗ 未配置'}")

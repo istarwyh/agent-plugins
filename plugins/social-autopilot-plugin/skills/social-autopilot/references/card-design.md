@@ -1,5 +1,12 @@
 # 新闻卡片设计规范
 
+## 图片生成策略
+
+- 优先使用 `/image-skill` 生成 AI 新闻配图、封面、海报或视觉素材。
+- 如果 `/image-skill` 不可用，提示用户按根 README 安装 `openai-plugin`，不要静默退回为“已使用图片 LLM”。
+- `generate_card.py` 是 HTML 模板截图 fallback，只负责生成基础新闻卡片，不代表调用了图片生成 LLM。
+- 小红书封面需要 1080x1440 时，可结合 `/image-skill` 生成主体图，再按 `/xhs-cover` 或发布渠道要求处理比例。
+
 ## 尺寸
 
 - **画布**: 1080 x 1080 px（Instagram 正方形帖子标准尺寸）

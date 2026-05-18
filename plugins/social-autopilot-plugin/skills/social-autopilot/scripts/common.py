@@ -2,11 +2,10 @@ import json
 import os
 import sqlite3
 from copy import deepcopy
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
-from loguru import logger
 
 WORK_DIR = Path.home() / "social-autopilot"
 SKILL_DIR = Path(__file__).resolve().parent.parent
@@ -241,6 +240,27 @@ def _merge_defaults(config: dict, defaults: dict) -> dict:
         else:
             merged[key] = value
     return merged
+
+
+def find_openai_image_skill() -> Path | None:
+    for parent in SKILL_DIR.parents:
+        direct_path = parent / "openai-plugin" / "skills" / "image-skill" / "SKILL.md"
+        if direct_path.exists():
+            return direct_path
+
+        versioned_dir = parent / "openai-plugin"
+        if versioned_dir.exists():
+            matches = sorted(versioned_dir.glob("*/skills/image-skill/SKILL.md"))
+            if matches:
+                return matches[-1]
+
+    cache_root = Path.home() / ".claude" / "plugins" / "cache"
+    if cache_root.exists():
+        matches = sorted(cache_root.glob("*/openai-plugin/*/skills/image-skill/SKILL.md"))
+        if matches:
+            return matches[-1]
+
+    return None
 
 
 def get_channel_config(config: dict, channel: str) -> dict:
