@@ -56,6 +56,13 @@ Each skill is a self-contained folder with instructions, scripts, and resources 
 |-------|-------------|
 | `/notify-on-complete` | Send system notifications when Claude Code completes tasks. Use when the user wants to configure ... |
 
+### openai-plugin
+> Generate images through the local OpenAI CLI against OpenAI-compatible providers. Includes cliproxyapi defaults for the local gpt-image-2 proxy on port 8317.
+
+| Skill | Description |
+|-------|-------------|
+| `/image-skill` | Use this skill whenever the user wants to generate an image with the OpenAI CLI, mentions OpenAI-... |
+
 ### oss-plugin
 > Trigger when the user asks to upload, download, list, delete, sync, or generate signed URLs for files on Alibaba Cloud OSS (Object Storage Service). Operates via Python CLI scripts wrapping the oss2 SDK.
 

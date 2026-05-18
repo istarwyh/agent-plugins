@@ -1,0 +1,140 @@
+---
+name: image-skill
+description: Use this skill whenever the user wants to generate an image with the OpenAI CLI, mentions OpenAI-compatible image generation, gpt-image-2, cliproxyapi, sk-local-gemini, or asks to test image generation through a local OpenAI CLI proxy. This skill captures the reliable workflow for creating PNG images without dumping base64 output into the terminal.
+---
+
+# OpenAI CLI Image Skill
+
+Generate images with the local `openai` CLI and save the returned base64 image to a file.
+
+## First-Use Provider Question
+
+On the first use in a conversation or task, ask the user which provider to use unless they already specified it.
+
+Recommended short question:
+
+```text
+这次图片生成用哪个 provider？如果用本机 cliproxyapi，我会默认使用 sk-local-gemini、http://127.0.0.1:8317/v1 和 gpt-image-2。
+```
+
+After the provider is known, continue using that provider for the current task unless the user changes it.
+
+## Provider Defaults
+
+### cliproxyapi
+
+Use these defaults:
+
+```text
+OPENAI_API_KEY=sk-local-gemini
+OPENAI_BASE_URL=http://127.0.0.1:8317/v1
+OPENAI_IMAGE_MODEL=gpt-image-2
+```
+
+This local proxy has been verified with:
+
+```bash
+openai --api-key sk-local-gemini \
+  --base-url http://127.0.0.1:8317/v1 \
+  models list
+```
+
+The image endpoint also works through the OpenAI CLI:
+
+```bash
+openai --api-key sk-local-gemini \
+  --base-url http://127.0.0.1:8317/v1 \
+  images generate \
+  --model gpt-image-2 \
+  --prompt "一只白色陶瓷咖啡杯放在木桌上，清晨自然光，极简产品摄影，背景干净" \
+  --size 1024x1024
+```
+
+### Other OpenAI-Compatible Providers
+
+Ask for these values before generating:
+
+- API key or environment variable name
+- Base URL ending in `/v1`
+- Image model name
+- Desired size, if not obvious
+
+Do not invent provider credentials.
+
+## Workflow
+
+1. Confirm `openai` exists:
+
+```bash
+which openai && openai --version
+```
+
+2. Check the provider and model when using a new provider:
+
+```bash
+openai --api-key "$OPENAI_API_KEY" \
+  --base-url "$OPENAI_BASE_URL" \
+  models list
+```
+
+3. Generate and decode the image directly to a file. Avoid printing full JSON because image responses contain very large `b64_json` payloads.
+
+For macOS:
+
+```bash
+mkdir -p generated/openai-images
+openai --api-key "$OPENAI_API_KEY" \
+  --base-url "$OPENAI_BASE_URL" \
+  images generate \
+  --model "$OPENAI_IMAGE_MODEL" \
+  --prompt "$PROMPT" \
+  --size "${SIZE:-1024x1024}" \
+  --format json \
+  --transform 'data.0.b64_json' \
+  --raw-output \
+  | base64 -D > "generated/openai-images/image.png"
+```
+
+For Linux, replace `base64 -D` with `base64 -d`.
+
+4. Verify the saved file:
+
+```bash
+file generated/openai-images/image.png
+```
+
+5. If visual confirmation is useful, open or view the local PNG and report the saved path to the user.
+
+## Recommended Command For cliproxyapi
+
+Use a timestamped filename to avoid overwriting prior generations:
+
+```bash
+mkdir -p generated/openai-images
+OUT="generated/openai-images/gpt-image-2-$(date +%Y%m%d-%H%M%S).png"
+openai --api-key sk-local-gemini \
+  --base-url http://127.0.0.1:8317/v1 \
+  images generate \
+  --model gpt-image-2 \
+  --prompt "$PROMPT" \
+  --size "${SIZE:-1024x1024}" \
+  --format json \
+  --transform 'data.0.b64_json' \
+  --raw-output \
+  | base64 -D > "$OUT"
+file "$OUT"
+```
+
+## Output Handling
+
+- Save images under `generated/openai-images/` unless the user gives a path.
+- Return a local file link or path after successful generation.
+- Do not paste `b64_json` into the response.
+- Do not run raw `images generate --format json` without `--transform 'data.0.b64_json' --raw-output` unless debugging a provider issue.
+
+## Troubleshooting
+
+- If `models list` fails, check whether the proxy is running and whether the base URL includes `/v1`.
+- If `images generate` returns 404, the provider may not implement `/v1/images/generations`; ask whether it supports image generation through another endpoint.
+- If the output file is empty or not a PNG, rerun with `--format json` into a temporary file and inspect only top-level fields, not the full base64 payload.
+- If generation is slow, wait for the CLI process to finish; local proxy image generation can take tens of seconds.

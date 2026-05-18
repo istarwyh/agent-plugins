@@ -61,6 +61,12 @@
       "description": "Claude Code environment variable configuration wizard. Interactive guided setup based on user persona (local, proxy, non-Anthropic model, cloud, CI). Optimized for mainland China users.",
       "source": "./plugins/env-config-plugin",
       "category": "productivity-organization"
+    },
+    {
+      "name": "openai-plugin",
+      "description": "Generate images through the local OpenAI CLI against OpenAI-compatible providers. Includes cliproxyapi defaults for the local gpt-image-2 proxy on port 8317.",
+      "source": "./plugins/openai-plugin",
+      "category": "productivity-organization"
     }
   ]
 }
