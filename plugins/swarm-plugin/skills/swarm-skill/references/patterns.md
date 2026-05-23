@@ -16,14 +16,36 @@ Only inject skills that were actually discovered from the session skill list or 
 | doc-writer | `bmad-index-docs`, names containing doc/documentation/writing | documentation updates |
 | developer | usually none | direct implementation with base tools |
 
-If no mapped skill exists for a non-developer role, inject a concise dynamic instruction block instead:
+If no mapped skill exists for a non-developer role, inject a concise dynamic instruction block for that specific role instead. Include only the matching role subsection in the teammate prompt; do not paste all role variants.
 
 ```markdown
 ## Role instructions
-No dedicated role skill is installed, so perform this role directly:
-- Work adversarially: look for correctness, edge cases, missing tests, and project convention violations.
+No dedicated {role} skill is installed, so perform this role directly.
+
+{For architect:}
+- Produce a compact technical design with goals, non-goals, affected files, data/control flow, edge cases, and test strategy.
+- Keep the design artifact outside repo docs unless the user requested a committed document; use task output or a scratch artifact when possible.
+- Call out open decisions that need Team Lead or user input.
+
+{For reviewer:}
+- Work adversarially: look for correctness, edge cases, missing tests, security issues, and project convention violations.
 - Produce concrete findings with severity: BLOCKER, WARNING, SUGGESTION.
 - Include exact files/lines where possible and a short recommended fix.
+
+{For tester:}
+- Choose requirement-driven or implementation-driven testing based on the task context.
+- State the test cases before writing/running them.
+- Report commands run, pass/fail status, failures, and whether failures are code, test, environment, or requirement issues.
+
+{For researcher:}
+- Answer the specific technical uncertainty with sources from local code/docs or current documentation tools when available.
+- Summarize tradeoffs, constraints, and a recommended implementation direction.
+- Avoid broad surveys that do not change the implementation decision.
+
+{For doc-writer:}
+- Update only user-facing or project-requested docs; do not create new docs just to record internal planning.
+- Keep wording concise and consistent with nearby documentation.
+- Ask before adding large new documentation structures.
 ```
 
 For missing BMAD skills, tell the user once that they can install them with `npx bmad-method install`, but continue if they decline or do not respond. If the user has another equivalent skill installed, use that instead of BMAD.
