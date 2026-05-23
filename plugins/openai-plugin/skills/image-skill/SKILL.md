@@ -21,7 +21,7 @@ test -f "$DEFAULT_PROVIDER_FILE" && cat "$DEFAULT_PROVIDER_FILE"
 If the file exists and the user did not explicitly request a different provider, use that saved provider as the default. Mention it briefly, for example:
 
 ```text
-使用已记录的默认 provider：cliproxyapi。
+Using the saved default provider: cliproxyapi.
 ```
 
 If the file does not exist, ask the user which provider to use unless they already specified it.
@@ -29,7 +29,7 @@ If the file does not exist, ask the user which provider to use unless they alrea
 Recommended short question:
 
 ```text
-这次图片生成用哪个 provider？如果用本机 cliproxyapi，我会默认使用 sk-local-gemini、http://127.0.0.1:8317/v1 和 gpt-image-2。
+Which provider should I use for this image generation? If you use local cliproxyapi, I will default to sk-local-gemini, http://127.0.0.1:8317/v1, and gpt-image-2.
 ```
 
 After an image is generated and the output file is verified, write the provider to the default provider file. Do this only after success so a failed provider is not remembered.
@@ -91,7 +91,7 @@ openai --api-key sk-local-gemini \
   --base-url http://127.0.0.1:8317/v1 \
   images generate \
   --model gpt-image-2 \
-  --prompt "一只白色陶瓷咖啡杯放在木桌上，清晨自然光，极简产品摄影，背景干净" \
+  --prompt "A white ceramic coffee cup on a wooden table, morning natural light, minimalist product photography, clean background" \
   --size 1024x1024
 ```
 

@@ -64,7 +64,7 @@
     },
     {
       "name": "openai-plugin",
-      "description": "Generate images through the local OpenAI CLI against OpenAI-compatible providers. Includes cliproxyapi defaults for the local gpt-image-2 proxy on port 8317.",
+      "description": "Generate images through OpenAI-compatible CLI providers and Codex CLI OAuth. Includes cliproxyapi defaults plus a codex-image skill for local gpt-image-2 output without API key management.",
       "source": "./plugins/openai-plugin",
       "category": "productivity-organization"
     }

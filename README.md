@@ -57,10 +57,11 @@ Each skill is a self-contained folder with instructions, scripts, and resources 
 | `/notify-on-complete` | Send system notifications when Claude Code completes tasks. Use when the user wants to configure ... |
 
 ### openai-plugin
-> Generate images through the local OpenAI CLI against OpenAI-compatible providers. Includes cliproxyapi defaults for the local gpt-image-2 proxy on port 8317.
+> Generate images through OpenAI-compatible CLI providers and Codex CLI OAuth. Includes cliproxyapi defaults plus a codex-image skill for local gpt-image-2 output without API key management.
 
 | Skill | Description |
 |-------|-------------|
+| `/codex-image` | Generate images through Codex CLI's built-in image_gen tool with gpt-image-2 and Codex OAuth, wit... |
 | `/image-skill` | Use this skill whenever the user wants to generate an image with the OpenAI CLI, mentions OpenAI-... |
 
 ### oss-plugin
