@@ -15,9 +15,11 @@ description: >
 
 ## 0. Prerequisites
 
-Run `scripts/check_env.sh` first. Handle by exit code:
+Run `scripts/check_env.sh` first. The script self-learns successful readiness: after a full check passes once, it records `~/.claude/swarm-skill/agent-teams-ready` and later invocations return ready from that cache by default instead of repeating the environment check. Use `scripts/check_env.sh --force` only when the user asks to troubleshoot, Claude Code was upgraded/downgraded, Agent Teams behavior looks unavailable, or the cached result is suspected to be stale.
 
-- **Exit 0**: Agent Teams is ready. Continue.
+Handle by exit code:
+
+- **Exit 0**: Agent Teams is ready. Continue. If output starts with `OK:CACHE`, do not perform extra environment/settings checks unless there is a concrete failure later.
 - **Exit 1**: Claude Code version is too low. Tell the user to run `claude update`. Stop.
 - **Exit 2**: Agent Teams is not enabled. Read `~/.claude/settings.json`, add `"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"` to the `env` object, preserve existing config, write back, then tell the user to restart Claude Code. Stop.
 
