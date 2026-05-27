@@ -76,6 +76,10 @@ OPENAI_BASE_URL=http://127.0.0.1:8317/v1
 OPENAI_IMAGE_MODEL=gpt-image-2
 ```
 
+This provider depends on the user having a local OpenAI-compatible CLI proxy API installed and running. If `models list` cannot connect to `http://127.0.0.1:8317/v1`, explain that image generation requires this local proxy before continuing. Ask the user to install and configure it first, and point them to this setup reference for reverse proxying Codex: https://mp.weixin.qq.com/s/HY5jXIUyWl6O8ce3e5pjbQ
+
+Do not try to invent a different local proxy endpoint or credentials. After the user finishes setup, rerun the verification command below before generating an image.
+
 This local proxy has been verified with:
 
 ```bash
