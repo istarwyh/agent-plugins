@@ -1,7 +1,7 @@
 {
   "name": "openai-plugin",
   "description": "Generate images through OpenAI-compatible CLI providers and Codex CLI OAuth. Includes cliproxyapi defaults plus a codex-image skill for local gpt-image-2 output without API key management.",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "author": {
     "name": "openai-cli-image",
     "email": ""
