@@ -104,32 +104,37 @@ codex exec "Perform these tasks:
   --skip-git-repo-check
 ```
 
-5. Verify each saved image.
+5. Verify every saved image.
 
 ```bash
 file "${OUT_DIR}/${FILENAME}.png"
 ```
 
-For multiple images, verify each suffixed file.
+For multiple images, verify every suffixed file.
 
-6. Display the result.
+6. Always display every generated PNG inline.
 
-Use the `Read` tool on generated PNG files when visual confirmation is useful or when the user expects to see the image inline. Then report the saved paths.
+Use the `Read` tool on each generated PNG so the user sees the image inside Claude Code before you summarize anything.
+
+7. Report concise metadata only after all PNG files have been displayed.
 
 ## Output Format
 
-After successful generation, summarize the result in this shape:
+After successful generation, verify each PNG with `file`, display each PNG with the `Read` tool, then summarize the result in this shape:
 
 ```text
 Image generated
 Prompt: <prompt used>
+Model: gpt-image-2 via Codex CLI
 Size: <size>
 Quality: <quality>
 Count: <count>
 Auth: Codex OAuth
 Saved files:
-- <path>
+- <path> (<byte size>)
 ```
+
+Do not return shell commands, Codex transcripts, generated code, raw JSON, image bytes, or base64 unless debugging a failure.
 
 ## Troubleshooting
 
@@ -148,6 +153,8 @@ Saved files:
 - Use Codex CLI and Codex OAuth for this skill; do not ask for or store OpenAI API keys.
 - Do not call the OpenAI REST API with Codex OAuth tokens.
 - Do not paste generated image bytes or base64 into the response.
+- Do not return shell commands, Codex transcripts, generated code, or raw JSON unless debugging a failure.
+- Always verify and then display every generated PNG with the `Read` tool before reporting completion.
 - Do not overwrite existing files.
 - Save images to the project root by default unless the user gives `--out`.
 - Keep responses concise and include the local file paths after success.

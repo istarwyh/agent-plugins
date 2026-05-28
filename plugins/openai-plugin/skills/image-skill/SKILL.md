@@ -146,13 +146,26 @@ openai --api-key "$OPENAI_API_KEY" \
 
 For Linux, replace `base64 -D` with `base64 -d`.
 
-4. Verify the saved file:
+4. Verify every saved file:
 
 ```bash
 file generated/openai-images/image.png
 ```
 
-5. If visual confirmation is useful, open or view the local PNG and report the saved path to the user.
+5. Always display every generated PNG inline.
+
+Use the `Read` tool on each saved PNG so the user sees the image inside Claude Code before you summarize anything.
+
+6. Report concise metadata only after the PNG has been displayed:
+
+```text
+Image generated
+Prompt: <prompt used>
+Model: <model and auth route>
+Size: <size>
+Quality: <quality, if applicable>
+Saved file: <path>
+```
 
 ## Recommended Command For cliproxyapi
 
@@ -177,8 +190,10 @@ file "$OUT"
 ## Output Handling
 
 - Save images under `generated/openai-images/` unless the user gives a path.
-- Return a local file link or path after successful generation.
-- Do not paste `b64_json` into the response.
+- Verify every saved image with `file`.
+- Always use the `Read` tool to display every generated PNG inline before reporting completion.
+- Report only concise metadata: prompt, model/auth route, size, quality if applicable, and saved file path.
+- Do not return shell commands, generated code, raw JSON, `b64_json`, or base64 unless debugging a failure.
 - Do not run raw `images generate --format json` without `--transform 'data.0.b64_json' --raw-output` unless debugging a provider issue.
 
 ## Troubleshooting
