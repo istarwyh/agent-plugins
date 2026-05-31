@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/notify.sh",
+            "args": ["Claude Code", "任务已完成，请查看结果"],
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -49,15 +49,22 @@ def resolve_xhs_cli() -> Path | None:
     if env_path:
         candidates.append(Path(env_path).expanduser())
 
-    candidates.append(
-        SKILL_DIR.parents[2]
-        / "xiaohongshu-plugin"
-        / "xiaohongshu-skills"
-        / "scripts"
-        / "cli.py"
-    )
+    for parent in SKILL_DIR.parents:
+        candidates.append(parent / "xiaohongshu-plugin" / "xiaohongshu-skills" / "scripts" / "cli.py")
+        candidates.extend(sorted((parent / "xiaohongshu-plugin").glob("*/xiaohongshu-skills/scripts/cli.py")))
+        candidates.append(parent / "plugins" / "xiaohongshu-plugin" / "xiaohongshu-skills" / "scripts" / "cli.py")
 
+    cache_root = Path.home() / ".claude" / "plugins" / "cache"
+    if cache_root.exists():
+        candidates.extend(sorted(cache_root.glob("*/xiaohongshu-plugin/xiaohongshu-skills/scripts/cli.py")))
+        candidates.extend(sorted(cache_root.glob("*/xiaohongshu-plugin/*/xiaohongshu-skills/scripts/cli.py")))
+
+    seen = set()
     for path in candidates:
+        path = path.expanduser()
+        if path in seen:
+            continue
+        seen.add(path)
         if path.exists():
             return path
     return None
@@ -150,17 +157,24 @@ def publish_pending(ctx, channel_config: dict[str, Any], dry_run: bool = False, 
     out_dir.mkdir(parents=True, exist_ok=True)
     visibility = channel_config.get("visibility", "公开可见")
     config_tags = channel_config.get("tags", [])
+    publish_mode = _normalize_publish_mode(channel_config.get("publish_mode", "draft"))
+    command_name = "publish" if publish_mode == "publish" else "fill-publish"
+    success_status = "published" if publish_mode == "publish" else "drafted"
+    action_label = "发布" if publish_mode == "publish" else "填表"
+    timeout_seconds = int(channel_config.get("timeout_seconds", 300))
 
     for row in rows:
         result.attempted += 1
         payload = _build_payload(row, config_tags, visibility, ctx.work_dir)
+        if not payload["image_path"] and not dry_run:
+            payload["image_path"] = _ensure_card_path(row, ctx)
         if not payload["image_path"]:
             result.skipped += 1
             result.add_message(f"草稿 #{row['id']} 缺少可用图片，小红书图文笔记至少需要 1 张图片。")
             continue
 
         if dry_run:
-            _print_preview(row["id"], payload)
+            _print_preview(row["id"], payload, publish_mode)
             result.succeeded += 1
             continue
 
@@ -172,7 +186,7 @@ def publish_pending(ctx, channel_config: dict[str, Any], dry_run: bool = False, 
         cmd = [
             "python3",
             str(status.cli_path),
-            "fill-publish",
+            command_name,
             "--title-file",
             str(title_file),
             "--content-file",
@@ -187,24 +201,92 @@ def publish_pending(ctx, channel_config: dict[str, Any], dry_run: bool = False, 
             cmd.extend(payload["tags"])
 
         try:
-            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=240)
+            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_seconds)
         except subprocess.TimeoutExpired:
             _update_row_status(ctx.db_path, row["id"], "failed")
             result.failed += 1
-            result.add_message(f"草稿 #{row['id']} 小红书填表超时。")
+            result.add_message(f"草稿 #{row['id']} 小红书{action_label}超时。")
             continue
 
         if proc.returncode == 0:
-            _update_row_status(ctx.db_path, row["id"], "drafted")
+            _update_row_status(ctx.db_path, row["id"], success_status)
             result.succeeded += 1
-            result.add_message(f"草稿 #{row['id']} 已填入小红书发布页，未自动点击发布。")
+            if publish_mode == "publish":
+                result.add_message(f"草稿 #{row['id']} 已发布到小红书。")
+            else:
+                result.add_message(f"草稿 #{row['id']} 已填入小红书发布页，未自动点击发布。")
         else:
             _update_row_status(ctx.db_path, row["id"], "failed")
             detail = (proc.stderr or proc.stdout or "unknown error").strip()[:300]
             result.failed += 1
-            result.add_message(f"草稿 #{row['id']} 小红书填表失败: {detail}")
+            result.add_message(f"草稿 #{row['id']} 小红书{action_label}失败: {detail}")
 
     return result
+
+
+def _normalize_publish_mode(mode: str) -> str:
+    normalized = str(mode or "draft").strip().lower()
+    if normalized in {"publish", "click-publish", "auto", "automatic"}:
+        return "publish"
+    return "draft"
+
+
+def _ensure_card_path(row, ctx) -> Path | None:
+    existing = _resolve_image(_row_get(row, "card_path"), ctx.work_dir)
+    if existing:
+        return existing
+
+    ai_cover = _find_ai_cover(row, ctx.work_dir)
+    if ai_cover:
+        with get_db(ctx.db_path) as conn:
+            conn.execute("UPDATE post_drafts SET card_path=? WHERE id=?", (str(ai_cover), row["id"]))
+        return ai_cover
+
+    from generate_card import _safe_filename, generate_single_card
+
+    title = _row_get(row, "news_title") or _row_get(row, "platform_title") or "热点资讯更新"
+    slug = _safe_filename(title)
+    if slug:
+        matches = sorted((ctx.work_dir / "output" / "cards").glob(f"card_*_{slug[:60]}*.png"), reverse=True)
+        if matches:
+            with get_db(ctx.db_path) as conn:
+                conn.execute("UPDATE post_drafts SET card_path=? WHERE id=?", (str(matches[0]), row["id"]))
+            return matches[0]
+
+    card_path = generate_single_card(
+        title=title,
+        category=row["category"],
+        brand_color=_get_brand_color(ctx.config, row["category"]),
+        output_dir=ctx.work_dir / "output" / "cards",
+        dry_run=False,
+    )
+    if card_path:
+        with get_db(ctx.db_path) as conn:
+            conn.execute("UPDATE post_drafts SET card_path=? WHERE id=?", (str(card_path), row["id"]))
+    return card_path
+
+
+def _find_ai_cover(row, work_dir: Path) -> Path | None:
+    cover_dir = work_dir / "output" / "ai-covers"
+    if not cover_dir.exists():
+        return None
+    patterns = [
+        f"{row['platform']}_{row['id']}_*.png",
+        f"xiaohongshu_{row['id']}_*.png",
+        f"xhs_{row['id']}_*.png",
+    ]
+    for pattern in patterns:
+        matches = sorted(cover_dir.glob(pattern), reverse=True)
+        if matches:
+            return matches[0]
+    return None
+
+
+def _get_brand_color(config: dict[str, Any], category: str) -> str:
+    for source in config.get("sources", []):
+        if source.get("category") == category:
+            return source.get("brand_color", "#333333")
+    return "#333333"
 
 
 def _load_pending_rows(db_path: Path, limit: int):
@@ -336,8 +418,9 @@ def _update_row_status(db_path: Path, row_id: int, status: str):
         )
 
 
-def _print_preview(row_id: int, payload: dict[str, Any]):
-    print(f"[DRY-RUN][xiaohongshu] 草稿 #{row_id}")
+def _print_preview(row_id: int, payload: dict[str, Any], publish_mode: str):
+    action = "直接发布" if publish_mode == "publish" else "填表不发布"
+    print(f"[DRY-RUN][xiaohongshu][{action}] 草稿 #{row_id}")
     print(f"  标题: {payload['title']}")
     print(f"  可见范围: {payload['visibility']}")
     print(f"  图片: {payload['image_path']}")

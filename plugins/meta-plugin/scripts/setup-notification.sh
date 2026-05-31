@@ -45,7 +45,6 @@ if command -v jq &> /dev/null; then
     fi
 
     # Append notification hook to Stop hooks (non-destructive)
-    local new_hook
     new_hook=$(jq -n \
         --arg cmd "bash $NOTIFY_SCRIPT \"Claude Code\" \"任务已完成，请查看结果\"" \
         '{"type": "command", "command": $cmd, "timeout": 10}')

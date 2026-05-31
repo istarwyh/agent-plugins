@@ -34,7 +34,10 @@
 | "Playwright 未安装" | 缺少 playwright 包 | `pip install playwright && python -m playwright install chromium` |
 | 卡片文字显示异常 | Google Fonts 加载失败 | 检查网络连接；Playwright 需要联网加载字体 |
 | 图片全黑或空白 | HTML 模板问题 | 检查 templates/news_card.html 是否完整 |
-| `/image-skill` 不可用 | 未安装 openai-plugin | 按根 README 运行 `npx skills add istarwyh/agent-plugins`，或安装 `openai-plugin@agent-plugins` |
+| `/codex-image` 不可用 | 未安装 openai-plugin | 按根 README 运行 `npx skills add istarwyh/agent-plugins`，或安装 `openai-plugin@agent-plugins` |
+| `Codex CLI 未安装` | 未安装 Codex CLI | 运行 `npm install -g @openai/codex`，然后 `codex login` |
+| `Codex 未登录` | Codex OAuth 未登录或过期 | 运行 `codex login` 后重试 `generate_ai_covers.py` |
+| `/image-skill` 不可用 | OpenAI-compatible 图片备选未安装 | 按根 README 安装 `openai-plugin@agent-plugins` |
 
 ## Meta 排期
 
@@ -52,7 +55,7 @@
 | "小红书渠道未检测到 xiaohongshu-plugin" | 未安装小红书插件 | 按根 README 运行 `npx skills add istarwyh/agent-plugins`，或安装 `xiaohongshu-plugin@agent-plugins` |
 | "小红书未登录" | 浏览器会话未登录 | 运行 `/xhs-login` |
 | "小红书环境检查失败" | Chrome Bridge 或扩展异常 | 运行 `/setup-xhs` |
-| "缺少可用图片" | 小红书图文至少需要 1 张图片 | 先运行卡片生成，或使用 `/xhs-cover` 生成封面 |
+| "缺少可用图片" | 小红书图文至少需要 1 张图片 | 优先运行 `generate_ai_covers.py` 或 `/codex-image` 生成封面；失败时模板卡片会 fallback |
 | 发布超时或结果不确定 | 小红书页面可能已提交但 CLI 未返回 | 先查 `xiaohongshu-plugin/references/publish-troubleshooting.md`，确认个人主页没有笔记后再重试 |
 
 ## 定时任务

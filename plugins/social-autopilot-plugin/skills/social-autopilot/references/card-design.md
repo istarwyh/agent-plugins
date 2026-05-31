@@ -2,10 +2,11 @@
 
 ## 图片生成策略
 
-- 优先使用 `/image-skill` 生成 AI 新闻配图、封面、海报或视觉素材。
-- 如果 `/image-skill` 不可用，提示用户按根 README 安装 `openai-plugin`，不要静默退回为“已使用图片 LLM”。
+- 优先使用 `/codex-image` 生成高质量 AI 新闻配图、封面、海报或视觉素材；它通过 Codex CLI + gpt-image-2 工作流，不需要单独管理 OpenAI API Key。
+- 批量草稿可先运行 `python scripts/run.py generate_ai_covers.py --platform xiaohongshu --limit 3 --quality high`，它会根据 `post_drafts` 生成提示词、调用 Codex CLI，并把生成图写回 `card_path`。
+- 如果 `/codex-image` 不可用，可用 `/image-skill` 作为 OpenAI-compatible 备选；两者都不可用时，提示用户按根 README 安装 `openai-plugin`，不要静默退回为“已使用图片 LLM”。
 - `generate_card.py` 是 HTML 模板截图 fallback，只负责生成基础新闻卡片，不代表调用了图片生成 LLM。
-- 小红书封面需要 1080x1440 时，可结合 `/image-skill` 生成主体图，再按 `/xhs-cover` 或发布渠道要求处理比例。
+- 小红书封面需要精修时使用 `/codex-image --size 1024x1536 --quality high` 生成竖版主体图；若需要精确 1080x1440，再按 `/xhs-cover` 或发布渠道要求处理比例。
 
 ## 尺寸
 

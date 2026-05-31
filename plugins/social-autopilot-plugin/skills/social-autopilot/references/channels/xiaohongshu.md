@@ -8,8 +8,9 @@
 - `/setup-xhs` — 安装 Python CLI 引擎和 Chrome 扩展
 - `/xhs-login` — 检查/完成登录
 - `/post-to-xhs` — 发布图文、视频、长文
-- `/image-skill` — 使用图片生成 LLM 生成新闻配图或封面主体图
-- `/xhs-cover` — 生成 1080x1440 小红书封面
+- `/codex-image` — 使用 Codex CLI + gpt-image-2 生成高质量新闻封面/素材
+- `/image-skill` — OpenAI-compatible 图片生成备选
+- `/xhs-cover` — 生成或裁切 1080x1440 小红书封面
 
 ## 安装方式
 
@@ -33,7 +34,7 @@ claude plugin install xiaohongshu-plugin@agent-plugins
 /xhs-login
 ```
 
-如果小红书 CLI 是手动安装的，在 `~/social-autopilot/.env` 设置：
+脚本会自动检测插件市场缓存和本仓库里的 versioned `xiaohongshu-plugin` CLI。如果小红书 CLI 是手动安装的，在 `~/social-autopilot/.env` 设置：
 
 ```bash
 XHS_CLI_PATH=/absolute/path/to/xiaohongshu-skills/scripts/cli.py
@@ -42,12 +43,12 @@ XHS_CLI_PATH=/absolute/path/to/xiaohongshu-skills/scripts/cli.py
 ## 发布约束
 
 - 标题最多 20 个中文字；ASCII 约每 2 个字符算 1 个中文单位。
-- 图文笔记至少需要 1 张图片。
+- 图文笔记至少需要 1 张图片；发布层会优先使用 `card_path`（包括 `generate_ai_covers.py` 或 `/codex-image` 生成的 AI 封面），缺失时自动生成模板新闻卡片。
 - 图片和视频不能混用。
 - 正文段落用空行分隔。
-- 需要 AI 图片时优先调用 `/image-skill`；缺失时按根 README 安装 `openai-plugin`。
+- 需要 AI 图片时优先调用 `/codex-image` 或运行 `generate_ai_covers.py`；`/image-skill` 是备选，缺失时按根 README 安装 `openai-plugin`。
 - 发布前展示标题、正文、标签、图片路径和可见范围。
-- 默认只填入发布页，不自动点击发布。
+- 默认只填入发布页，不自动点击发布；用户明确确认后可用 `publish_mode: "publish"` 或 `--xhs-publish-mode publish` 直接发布。
 - 发布超时或结果不确定时，先查 `xiaohongshu-plugin/references/publish-troubleshooting.md` 并确认个人主页状态，未确认失败前不要重试。
 
 ## 内容生成与字段映射
@@ -80,10 +81,24 @@ python scripts/run.py status.py
 
 ## 运行方式
 
+端到端准备小红书内容（抓新闻、生成中文草稿、生成 Codex AI 封面，但不发布）：
+
+```bash
+python scripts/run.py pipeline --channel xiaohongshu --limit 5 --ai-covers --ai-cover-limit 3 --no-publish
+```
+
+临时指定小红书渠道时可用 `--channel xiaohongshu`，不必先把 `config.json` 里的 xiaohongshu 设为 enabled。
+
 预览小红书草稿，不调用 CLI：
 
 ```bash
 python scripts/run.py publish_channels.py --channel xiaohongshu --dry-run
+```
+
+为待发布小红书草稿生成高质量 AI 封面：
+
+```bash
+python scripts/run.py generate_ai_covers.py --platform xiaohongshu --limit 3 --quality high
 ```
 
 填入小红书发布页但不点击发布：
@@ -92,7 +107,13 @@ python scripts/run.py publish_channels.py --channel xiaohongshu --dry-run
 python scripts/run.py publish_channels.py --channel xiaohongshu
 ```
 
-启用小红书渠道后，新生成内容会先写入平台无关 brief，再生成 `platform=xiaohongshu` 的小红书专属草稿：
+用户确认后直接发布：
+
+```bash
+python scripts/run.py publish_channels.py --channel xiaohongshu --xhs-publish-mode publish
+```
+
+启用小红书渠道后，新生成内容会先写入平台无关 brief，再生成 `platform=xiaohongshu` 的小红书专属草稿。长期使用可写入配置，临时任务用 `--channel xiaohongshu` 即可：
 
 ```json
 {

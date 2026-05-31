@@ -186,7 +186,7 @@ class AppContext:
     config: dict
     openai_key: str = ""
     openai_base_url: str = ""
-    openai_model: str = "moonshotai/kimi-k2.5"
+    openai_model: str = "moonshotai/kimi-k2.6"
     meta_page_id: str = ""
     meta_token: str = ""
     meta_ig_id: str = ""
@@ -215,7 +215,7 @@ def load_context(dry_run: bool = False) -> AppContext:
         config=config,
         openai_key=os.getenv("OPENAI_API_KEY", ""),
         openai_base_url=os.getenv("OPENAI_BASE_URL", ""),
-        openai_model=os.getenv("OPENAI_MODEL", "moonshotai/kimi-k2.5"),
+        openai_model=os.getenv("OPENAI_MODEL", "moonshotai/kimi-k2.6"),
         meta_page_id=os.getenv("META_PAGE_ID", ""),
         meta_token=os.getenv("META_PAGE_ACCESS_TOKEN", ""),
         meta_ig_id=os.getenv("META_IG_USER_ID", ""),
@@ -243,20 +243,28 @@ def _merge_defaults(config: dict, defaults: dict) -> dict:
 
 
 def find_openai_image_skill() -> Path | None:
+    return find_openai_skill("image-skill")
+
+
+def find_codex_image_skill() -> Path | None:
+    return find_openai_skill("codex-image")
+
+
+def find_openai_skill(skill_name: str) -> Path | None:
     for parent in SKILL_DIR.parents:
-        direct_path = parent / "openai-plugin" / "skills" / "image-skill" / "SKILL.md"
+        direct_path = parent / "openai-plugin" / "skills" / skill_name / "SKILL.md"
         if direct_path.exists():
             return direct_path
 
         versioned_dir = parent / "openai-plugin"
         if versioned_dir.exists():
-            matches = sorted(versioned_dir.glob("*/skills/image-skill/SKILL.md"))
+            matches = sorted(versioned_dir.glob(f"*/skills/{skill_name}/SKILL.md"))
             if matches:
                 return matches[-1]
 
     cache_root = Path.home() / ".claude" / "plugins" / "cache"
     if cache_root.exists():
-        matches = sorted(cache_root.glob("*/openai-plugin/*/skills/image-skill/SKILL.md"))
+        matches = sorted(cache_root.glob(f"*/openai-plugin/*/skills/{skill_name}/SKILL.md"))
         if matches:
             return matches[-1]
 

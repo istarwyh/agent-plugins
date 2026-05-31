@@ -3,7 +3,7 @@ import importlib.util
 import json
 import shutil
 
-from common import WORK_DIR, SKILL_DIR, DEFAULT_CONFIG, ensure_dirs, find_openai_image_skill, load_context
+from common import WORK_DIR, SKILL_DIR, DEFAULT_CONFIG, ensure_dirs, find_codex_image_skill, find_openai_image_skill, load_context
 from channels.xiaohongshu import check_login_status
 
 ENV_EXAMPLE = SKILL_DIR / ".env.example"
@@ -73,11 +73,18 @@ def main(args: list[str] = None):
     else:
         print("  ✓ 所有依赖已安装")
 
+    codex_image_skill_path = find_codex_image_skill()
+    if codex_image_skill_path:
+        codex_cli = shutil.which("codex")
+        cli_state = f"，Codex CLI: {codex_cli}" if codex_cli else "，Codex CLI 未安装"
+        print(f"  Codex 图片 skill: ✓ 已检测 ({codex_image_skill_path}{cli_state})")
+    else:
+        print("  Codex 图片 skill: ✗ 未安装，高质量 AI 封面需要 /codex-image")
     image_skill_path = find_openai_image_skill()
     if image_skill_path:
         print(f"  OpenAI 图片 skill: ✓ 已检测 ({image_skill_path})")
     else:
-        print("  OpenAI 图片 skill: ✗ 未安装，AI 图片生成需要 /image-skill")
+        print("  OpenAI 图片 skill: ✗ 未安装，AI 图片生成可用 /image-skill 作为备选")
         print("    安装: npx skills add istarwyh/agent-plugins")
         print("    或: claude plugin install openai-plugin@agent-plugins")
 

@@ -76,7 +76,7 @@ Each skill is a self-contained folder with instructions, scripts, and resources 
 
 | Skill | Description |
 |-------|-------------|
-| `/social-autopilot` | 当用户要求监控极客新闻(漫威/DC/星战/F1/游戏)、生成社交媒体帖子、 配置Instagram/Facebook/小红书/XHS/RED发布渠道、做多渠道社媒自动化、 |
+| `/social-autopilot` | 当用户要求监控极客新闻(漫威/DC/星战/F1/游戏)、生成社交媒体帖子、 发布小红书/XHS/RED 笔记、配置Instagram/Facebook/小红书发布渠道、 做多渠道社媒自动化、或提... |
 
 ### swarm-plugin
 > Decomposes complex tasks into parallel subtasks and coordinates an Agent Team of teammates. Triggers when user describes a multi-part development task or uses keywords like team/swarm/parallel/拆分/并行.

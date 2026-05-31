@@ -63,6 +63,10 @@ PLATFORM_ALIASES = {
 }
 
 
+def _normalize_platform(platform: str) -> str:
+    return PLATFORM_ALIASES.get(str(platform).lower(), platform)
+
+
 def fix_json(text: str) -> str:
     if text.startswith("```"):
         text = text.split("\n", 1)[1].rsplit("```", 1)[0]
@@ -371,6 +375,9 @@ def save_draft(draft: PostDraft, db_path: Path) -> int:
 def parse_args(args: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="LLM帖子生成")
     parser.add_argument("--input", help="指定新闻JSON文件路径")
+    parser.add_argument("--channel", choices=["meta", "xiaohongshu", "xhs", "red"], help="临时指定目标渠道，不依赖 config.json enabled")
+    parser.add_argument("--limit", type=int, help="本次最多处理的新闻条数，默认使用 MAX_POSTS_PER_RUN")
+    parser.add_argument("--skip-preflight", action="store_true", help="跳过 LLM 模型连通性预检")
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args(args)
 
@@ -389,13 +396,19 @@ def main(args: list[str] = None) -> list[PostDraft]:
         return []
 
     raw = json.loads(news_file.read_text())
-    news_items = [NewsItem(**item) for item in raw][:ctx.max_posts]
+    limit = opts.limit if opts.limit is not None else ctx.max_posts
+    news_items = [NewsItem(**item) for item in raw][:limit]
     if not news_items:
         print("无待处理新闻")
         return []
+    if len(raw) > limit:
+        print(f"本次只处理前 {limit} 条新闻（候选共 {len(raw)} 条，可用 --limit 或 MAX_POSTS_PER_RUN 调整）。")
 
     tags_map = {source["id"]: source.get("tags_seed", []) for source in ctx.config.get("sources", [])}
-    platforms = get_enabled_channels(ctx.config) or ["meta"]
+    if opts.channel:
+        platforms = [_normalize_platform(opts.channel)]
+    else:
+        platforms = get_enabled_channels(ctx.config) or ["meta"]
 
     if opts.dry_run:
         print(f"[DRY-RUN] 将处理 {len(news_items)} 条新闻，目标平台: {', '.join(platforms)}")
@@ -408,6 +421,8 @@ def main(args: list[str] = None) -> list[PostDraft]:
     if ctx.openai_base_url:
         client_kwargs["base_url"] = ctx.openai_base_url
     client = OpenAI(**client_kwargs)
+    if not opts.skip_preflight:
+        _preflight_llm(client, ctx.openai_model, ctx.openai_base_url)
 
     drafts = []
     for item in news_items:
@@ -438,6 +453,24 @@ def main(args: list[str] = None) -> list[PostDraft]:
 
     print(f"帖子生成完成: {len(news_items)} 条新闻 → {len(drafts)} 条平台草稿")
     return drafts
+
+
+def _preflight_llm(client: OpenAI, model: str, base_url: str = "") -> None:
+    try:
+        data = _call_json(
+            client,
+            model,
+            "Return only compact JSON.",
+            'Reply exactly as JSON: {"ok": true}',
+        )
+    except Exception as exc:
+        endpoint = base_url or "default OpenAI endpoint"
+        raise RuntimeError(
+            f"LLM 预检失败: model={model}, endpoint={endpoint}. "
+            "请检查 OPENAI_MODEL / OPENAI_BASE_URL / OPENAI_API_KEY 后再运行 pipeline。"
+        ) from exc
+    if data.get("ok") is not True:
+        raise RuntimeError(f"LLM 预检返回异常: model={model}, response={data}")
 
 
 def _call_json(client: OpenAI, model: str, system_prompt: str, user_prompt: str) -> dict[str, Any]:

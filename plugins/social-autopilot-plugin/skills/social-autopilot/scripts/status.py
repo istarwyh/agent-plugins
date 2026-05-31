@@ -1,8 +1,9 @@
 import argparse
 import json
+import shutil
 import sqlite3
 
-from common import WORK_DIR, find_openai_image_skill, load_context, init_db, get_db
+from common import WORK_DIR, find_codex_image_skill, find_openai_image_skill, load_context, init_db, get_db
 from channels.xiaohongshu import check_login_status
 
 
@@ -97,6 +98,13 @@ def main(args: list[str] = None):
         xhs_cfg = channels.get("xiaohongshu", {})
         print(f"  OpenAI Key: {'✓ 已配置' if ctx.openai_key else '✗ 未配置'}")
         print(f"  OpenAI Model: {ctx.openai_model}")
+        codex_image_skill_path = find_codex_image_skill()
+        if codex_image_skill_path:
+            codex_cli = shutil.which("codex")
+            cli_state = f", Codex CLI: {codex_cli}" if codex_cli else ", Codex CLI: 未安装"
+            print(f"  Codex Image Skill: ✓ 已检测 ({codex_image_skill_path}{cli_state})")
+        else:
+            print("  Codex Image Skill: ✗ 未安装")
         image_skill_path = find_openai_image_skill()
         if image_skill_path:
             print(f"  OpenAI Image Skill: ✓ 已检测 ({image_skill_path})")

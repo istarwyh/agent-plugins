@@ -18,6 +18,11 @@ def parse_args(args: list[str]) -> argparse.Namespace:
     parser.add_argument("--enabled", action="store_true", help="运行 config.json 中启用的渠道")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--limit", type=int, default=10)
+    parser.add_argument(
+        "--xhs-publish-mode",
+        choices=["draft", "publish"],
+        help="覆盖小红书发布模式：draft=只填表，publish=直接发布",
+    )
     return parser.parse_args(args)
 
 
@@ -38,7 +43,9 @@ def main(args: list[str] = None) -> list[ChannelResult]:
         if channel == "meta":
             results.append(_publish_meta(ctx, opts.dry_run))
         elif channel == "xiaohongshu":
-            cfg = ctx.config.get("channels", {}).get("xiaohongshu", {})
+            cfg = dict(ctx.config.get("channels", {}).get("xiaohongshu", {}))
+            if opts.xhs_publish_mode:
+                cfg["publish_mode"] = opts.xhs_publish_mode
             results.append(publish_xiaohongshu(ctx, cfg, dry_run=opts.dry_run, limit=opts.limit))
         else:
             result = ChannelResult(channel=channel, skipped=1)
