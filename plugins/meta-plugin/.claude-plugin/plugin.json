@@ -8,5 +8,6 @@
   },
   "agents": [
     "./agents/github-pr-auto-processor.md"
-  ]
+  ],
+  "hooks": "./hooks/hooks.json"
 }

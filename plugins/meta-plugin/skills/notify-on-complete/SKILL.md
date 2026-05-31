@@ -9,7 +9,7 @@ Send system notifications when Claude Code tasks complete, perfect for long-runn
 
 ## Automatic Setup
 
-When this plugin is installed through Claude Code, notifications are enabled automatically by `hooks/hooks.json`.
+When this plugin is installed through Claude Code, notifications are enabled automatically from the plugin manifest's `./hooks/hooks.json` entry. No setup script is required for normal plugin installs.
 
 For manual source-checkout installs only, run:
 
@@ -23,14 +23,15 @@ The plugin ships this Stop hook:
 
 ```json
 {
+  "description": "Send a desktop notification when Claude Code finishes a turn.",
   "hooks": {
     "Stop": [
       {
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/notify.sh",
-            "args": ["Claude Code", "任务已完成，请查看结果"],
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/notify.sh\" \"Claude Code\" \"任务已完成，请查看结果\"",
             "timeout": 10
           }
         ]
