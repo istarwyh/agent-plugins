@@ -14,9 +14,13 @@ python3 scripts/generate_readme.py
 
 # Bump marketplace/plugin manifest patch versions for changed plugins; used by CI
 python3 scripts/bump_versions.py <base-ref> <head-ref>
+
+# Optional: enable the repository pre-commit hook locally
+# The hook regenerates README.md and re-stages it when needed.
+git config core.hooksPath .githooks
 ```
 
-`.githooks/pre-commit` runs `python3 scripts/generate_readme.py` and re-stages `README.md` if the hook is configured locally. The GitHub workflow `.github/workflows/bump-versions.yml` runs `scripts/bump_versions.py` on pushes to `master` and commits manifest version updates.
+`.githooks/pre-commit` runs `python3 scripts/generate_readme.py` and re-stages `README.md` if the hook is configured locally. The GitHub workflow `.github/workflows/bump-versions.yml` runs `scripts/bump_versions.py` on pushes to `master` and commits manifest version updates for `.claude-plugin/marketplace.json` plus changed plugin manifests.
 
 ### Xiaohongshu automation engine
 
@@ -65,7 +69,7 @@ A typical plugin is organized around Claude Skills:
 - `scripts/` holds executable helpers used by the skill rather than content Claude should read eagerly.
 - `templates/` or resources are plugin-specific assets; for example social autopilot uses `templates/news_card.html`.
 
-The root `scripts/generate_readme.py` scans top-level `plugins/*/skills/*/SKILL.md` files, reads skill frontmatter, and rewrites the README section between `<!-- SKILLS:START -->` and `<!-- SKILLS:END -->`. It intentionally skips the embedded `xiaohongshu-skills/skills` submodule-like directory.
+The root `scripts/generate_readme.py` scans `plugins/*/skills/*/SKILL.md` and `plugins/*/*/skills/*/SKILL.md`, reads skill frontmatter, groups skills by plugin manifest description, and rewrites only the README section between `<!-- SKILLS:START -->` and `<!-- SKILLS:END -->`. It intentionally skips the embedded `xiaohongshu-skills/skills` submodule-like directory. Do not hand-edit the generated README catalog; update `SKILL.md` or plugin manifests and rerun the generator.
 
 ## Major plugin families
 
@@ -98,5 +102,7 @@ Use `skill-best-practices.md` and `CONTRIBUTING.md` when adding or revising skil
 
 - Skill names in frontmatter must be lowercase letters, numbers, and hyphens.
 - Descriptions should state both what the skill does and when it should trigger; they drive skill discovery and README generation.
+- Write frontmatter descriptions in third person and keep them specific enough for skill selection.
 - Keep `SKILL.md` concise and link one level down to `references/` for detailed procedures.
-- When adding a new plugin or skill, update the plugin manifest, root marketplace, and README catalog; prefer regenerating the README with `python3 scripts/generate_readme.py` rather than editing the generated section by hand.
+- Keep helper dependencies local to the skill directory (`requirements.txt`, local virtualenv setup, or plugin-local dispatcher); do not add a root package manager manifest just to support one plugin.
+- When adding a new plugin or skill, update the plugin manifest and root marketplace, then regenerate the README catalog with `python3 scripts/generate_readme.py` instead of editing the generated section by hand.
