@@ -50,7 +50,7 @@ Each skill is a self-contained folder with instructions, scripts, and resources 
 | `/gemini-skill` | 当用户想通过 Google Gemini 生成文本、生成图片、或提到"Gemini"/"问问Gemini"时触发。支持文本问答和图片创建，使用浏览器自动化与 Gemini 网页交互。 |
 
 ### meta-plugin
-> Meta plugin for Claude Code utilities. Includes slash command generation, task completion notifications, and a GitHub PR automation subagent for polling, fixing, validating, pushing, and safely squash-merging authorized PRs.
+> Meta plugin for Claude Code utilities. Includes: 1) Slash command generator with semantic versioning, automatic backups, and changelog tracking; 2) Task completion notifications with cross-platform support (macOS/Linux/Windows); 3) GitHub PR automation subagent for polling, fixing, validating, pushing, and safely squash-merging authorized PRs.
 
 | Skill | Description |
 |-------|-------------|
