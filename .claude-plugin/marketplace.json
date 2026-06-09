@@ -22,7 +22,7 @@
     },
     {
       "name": "meta-plugin",
-      "description": "Generate slash commands with semantic versioning, automatic backups, and changelog tracking. Use when the user wants to create, update, or version-manage Claude Code slash commands.",
+      "description": "Meta utilities for Claude Code, including slash command generation, task completion notifications, and a GitHub PR automation subagent for authorized PR polling, fixes, validation, and safe squash merges.",
       "source": "./plugins/meta-plugin",
       "category": "meta"
     },
