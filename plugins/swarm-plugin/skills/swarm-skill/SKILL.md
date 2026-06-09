@@ -44,8 +44,15 @@ Read `references/patterns.md` when you need role-to-skill matching, prompt templ
 ## 2. Core Workflow
 
 ```
-用户需求 → 分析拆分 → 创建 Team + Tasks → 启动 Teammates → 监控协调 → 汇总交付
+用户需求 → 需求理解门禁 → 分析拆分 → 创建 Team + Tasks → 启动 Teammates → 监控协调 → 汇总交付
 ```
+
+Before creating a team, creating tasks, or spawning teammates, run a visible requirement-understanding gate:
+
+1. Restate the understood goal, scope, expected deliverables, and known constraints in 2-4 concise bullets.
+2. Reflect on whether anything is unclear, underspecified, or internally inconsistent, including acceptance criteria, target files/modules, business rules, permissions, test expectations, and delivery format.
+3. If there is any real ambiguity, ask targeted questions immediately and stop before decomposition or execution. Prefer 1-4 concrete questions over a broad "please confirm".
+4. If the requirement is clear enough to act on, say so briefly and proceed into decomposition. Do not ask generic confirmation questions just to slow down; the point is to surface uncertainty before the swarm starts doing work.
 
 For typical development work, default to the full closed-loop pipeline:
 
@@ -93,6 +100,7 @@ You are the Team Lead.
 
 Key decision rules:
 
+- Before decomposition or execution, run the requirement-understanding gate to make your understanding visible and ask targeted clarification questions if any requirement is unclear.
 - Do **not** directly implement the user's requested code in the main session; delegate implementation to teammates.
 - Evaluate reviewer findings independently. Accept, reject, downgrade, or upgrade findings with reasons.
 - Resolve conflicts between teammates.
