@@ -17,6 +17,7 @@ python3 scripts/bump_versions.py <base-ref> <head-ref>
 
 # Optional: enable the repository pre-commit hook locally
 # The hook regenerates README.md and re-stages it when needed.
+# Note: this overrides the default .git/hooks directory.
 git config core.hooksPath .githooks
 ```
 

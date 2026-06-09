@@ -120,19 +120,13 @@ Available categories:
 - `data-analysis` - Data analysis and processing tools
 - `security-systems` - Security and system tools
 
-### 2. Update README.md
+### 2. Regenerate README.md
 
-Add your skill to the appropriate category section in the main README.md:
+The main README skill catalog is generated from `SKILL.md` frontmatter and plugin manifests. Do not hand-edit the generated section; update the source skill or manifest metadata, then run:
 
-```markdown
-- [**Your Skill Name**](./your-skill-name/) - Brief description of what it does and key features.
+```bash
+python3 scripts/generate_readme.py
 ```
-
-Follow the existing format:
-- Use bold for skill names
-- Keep descriptions concise (1-2 sentences)
-- Link to the skill's directory
-- Add attribution if based on someone's work
 
 ## Pull Request Process
 
@@ -140,7 +134,7 @@ Follow the existing format:
 2. Create a branch: `git checkout -b add-skill-name`
 3. Add your skill folder with all required files
 4. Update `.claude-plugin/marketplace.json`
-5. Update `README.md` in the appropriate category
+5. Run `python3 scripts/generate_readme.py`
 6. Commit your changes: `git commit -m "Add [Skill Name] skill"`
 7. Push to your fork: `git push origin add-skill-name`
 8. Open a Pull Request
@@ -164,7 +158,7 @@ Explain the real-world use case and include:
 - [ ] SKILL.md with proper YAML frontmatter
 - [ ] README.md (optional but recommended)
 - [ ] marketplace.json updated
-- [ ] Main README.md updated
+- [ ] Main README.md regenerated with `python3 scripts/generate_readme.py`
 - [ ] Tested on at least one Claude platform
 - [ ] No duplicate functionality
 - [ ] Safe operations (confirms before destructive actions)
