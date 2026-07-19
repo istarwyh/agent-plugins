@@ -24,6 +24,7 @@ No dedicated role skill is installed, so perform this role directly:
 - Work adversarially: look for correctness, edge cases, missing tests, and project convention violations.
 - Produce concrete findings with severity: BLOCKER, WARNING, SUGGESTION.
 - Include exact files/lines where possible and a short recommended fix.
+- For any claimed blocker or constraint, state the evidence source: code, tests, logs, explicit user requirement, business rule, or assumption.
 ```
 
 For missing BMAD skills, tell the user once that they can install them with `npx bmad-method install`, but continue if they decline or do not respond. If the user has another equivalent skill installed, use that instead of BMAD.
@@ -64,6 +65,11 @@ When a role has multiple matching skills, inject the most relevant 1-2 skills on
 ## 项目规范
 {Relevant CLAUDE.md instructions. Include: no unnecessary abstractions, no unwarranted comments, security-safe code, ask on ambiguity. For Python commands use `.venv/bin/python`, not bare python/python3.}
 
+## 输出要求
+- Treat blockers, constraints, deadlines, and workarounds as claims that need evidence.
+- For each such claim, state the source: code, tests, logs, explicit user requirement, business rule, or assumption.
+- If something is an assumption, label it as an assumption and propose the smallest verification or simpler alternative.
+
 ## 可用的 Skill（通过 Skill 工具调用）
 {For non-developer roles only. Include only discovered skills. If none, include dynamic role instructions instead.}
 ```
@@ -90,10 +96,10 @@ Then spawn teammates. Independent Agent calls should be in one message and all s
 | Phase | Team Lead behavior | What to avoid |
 |-------|--------------------|---------------|
 | Decompose / create / spawn | Act proactively: define tasks, dependencies, prompts, and skills | Waiting for the user to design the team |
-| Monitor / review / fix loops | Act responsively: inspect teammate output, make decisions, route corrections | Doing implementation work directly in the main session |
+| Monitor / review / fix loops | Act as the user's proxy: inspect teammate output, accept/reject/correct claims, route corrections | Relaying teammate claims as facts or doing implementation work directly in the main session |
 | Validate / deliver | Act proactively: verify, summarize, optionally create committer | Declaring done without tests or documented limitations |
 
-Ask the user only when the issue is ambiguous, scope-changing, business-specific, or externally risky. Otherwise drive the loop to the gate condition.
+Never outsource judgment to teammates. Teammate output is a proposal until the Team Lead accepts it. Ask the user only when the issue is ambiguous, scope-changing, business-specific, or externally risky. Otherwise drive the loop to the gate condition.
 
 ## Closed-Loop Gates
 
@@ -101,8 +107,9 @@ Ask the user only when the issue is ambiguous, scope-changing, business-specific
 
 1. Architect writes or updates the design artifact.
 2. Reviewer reviews the latest design artifact.
-3. Team Lead evaluates findings:
+3. Team Lead evaluates findings and any claimed constraints:
    - Accept real BLOCKER/WARNING findings.
+   - Reject blockers or constraints that are only artifacts of the teammate's proposed approach.
    - Downgrade or reject findings that conflict with user scope or project constraints.
    - Ask the user only when the decision is ambiguous or scope-changing.
 4. Accepted findings must be written back to the design artifact.
@@ -122,7 +129,7 @@ Design gate anti-patterns:
 
 1. Developer implements strictly from the latest design artifact.
 2. Code reviewer reviews the latest code.
-3. Team Lead accepts/rejects findings.
+3. Team Lead accepts/rejects findings and verifies claimed blockers before routing fixes.
 4. Developer fixes accepted findings.
 5. Review again.
 6. Exit only when no new accepted code issues remain.
@@ -138,6 +145,7 @@ Design gate anti-patterns:
 ## Monitoring Edge Cases
 
 - **Blocked teammate**: verify the dependency task status. Do not manually unblock by ignoring the dependency; complete or correct the upstream task.
+- **Claimed blocker**: verify that the blocker is grounded in code, tests, logs, explicit user requirements, or known business rules. If it is only created by the teammate's approach, reject it and route a simpler correction.
 - **Idle teammate**: if the teammate completed its work, clean up when the harness provides shutdown tools. If no cleanup tool exists, simply report completion.
 - **Interrupted teammate**: continue it with explicit context if continuation is available; otherwise spawn a replacement teammate with the latest artifacts and decisions.
 - **Conflicting edits**: Team Lead decides the authoritative version and routes correction work to the appropriate teammate.
