@@ -2,16 +2,17 @@
 name: swarm-skill
 description: >
   Decompose complex development tasks into a parallel Agent Team, create self-contained
-  teammate tasks, coordinate closed-loop review/test iterations, and summarize delivery.
-  Use whenever the user describes a multi-step development task such as implementing a
-  feature with tests, refactoring multiple modules, researching then implementing, or
-  explicitly asks for team/swarm/parallel/拆分/并行/分工. Do not use for single-step tasks
-  like fixing a typo, reading one file, or answering a simple question.
+  teammate tasks, act as the user's proxy and final gatekeeper over teammate outputs,
+  coordinate closed-loop review/test iterations, and summarize delivery. Use whenever
+  the user describes a multi-step development task such as implementing a feature with
+  tests, refactoring multiple modules, researching then implementing, or explicitly asks
+  for team/swarm/parallel/拆分/并行/分工. Do not use for single-step tasks like fixing a
+  typo, reading one file, or answering a simple question.
 ---
 
 # Swarm — 智能任务拆分与并行执行
 
-把复杂任务拆成多个 teammate 并行完成，由你作为 Team Lead 监控、决策、驱动闭环收敛并交付结果。
+把复杂任务拆成多个 teammate 并行完成，由你作为 Team Lead 代表用户把关、监控、决策、驱动闭环收敛并交付结果。
 
 ## 0. Prerequisites
 
@@ -44,7 +45,7 @@ Read `references/patterns.md` when you need role-to-skill matching, prompt templ
 ## 2. Core Workflow
 
 ```
-用户需求 → 需求理解门禁 → 分析拆分 → 创建 Team + Tasks → 启动 Teammates → 监控协调 → 汇总交付
+用户需求 → 需求理解门禁 → 分析拆分 → 创建 Team + Tasks → 启动 Teammates → host 把关与监控协调 → 汇总交付
 ```
 
 Before creating a team, creating tasks, or spawning teammates, run a visible requirement-understanding gate:
@@ -90,19 +91,27 @@ Common gate violations to avoid:
 
 ## 3. Team Lead Responsibilities
 
-You are the Team Lead.
+You are the Team Lead and the user's proxy. Teammates produce candidate work; you own final judgment.
 
 | Phase | Responsibility | Mode |
 |-------|----------------|------|
 | Analysis / task creation / spawn | Decompose, create tasks, write prompts, spawn teammates | Proactive |
-| Monitoring / review loops | Wait for teammate output, evaluate findings, coordinate fixes | Responsive |
+| Monitoring / review loops | Review teammate output as user proxy, accept/reject/correct it, coordinate fixes | Responsive |
 | Validation / delivery | Verify tests, summarize outputs, clean up | Proactive |
+
+User-proxy invariant:
+
+- Never outsource judgment to teammates. Every teammate output is a proposal until you accept it.
+- A claimed blocker, constraint, tradeoff, or success condition is not real until you can tie it to code, tests, logs, explicit user requirements, or known business rules.
+- Preserve the user's original problem framing. Challenge teammate work that solves a harder self-created problem, adds unnecessary constraints, or treats a workaround as architecture.
+- Before reporting a status, routing follow-up work, or entering the next phase, decide whether the teammate output would pass the user's review. If not, correct the teammate or ask the user when the decision is genuinely theirs.
+- Do this inline during normal monitoring. Do not add a separate reflection ceremony unless the evidence is genuinely unclear.
 
 Key decision rules:
 
 - Before decomposition or execution, run the requirement-understanding gate to make your understanding visible and ask targeted clarification questions if any requirement is unclear.
 - Do **not** directly implement the user's requested code in the main session; delegate implementation to teammates.
-- Evaluate reviewer findings independently. Accept, reject, downgrade, or upgrade findings with reasons.
+- Evaluate all teammate outputs independently, including reviewer findings, developer plans, research conclusions, blocker reports, and status summaries. Accept, reject, downgrade, or upgrade them with reasons.
 - Resolve conflicts between teammates.
 - Ask the user when a decision is genuinely ambiguous, scope-changing, business-specific, or requires external authorization.
 - Do not guess, skip, or silently choose on uncertain technical choices, business logic, or finding severity downgrades.
@@ -170,21 +179,22 @@ Use the template and mapping in `references/patterns.md` to write prompts. Non-d
 
 When teammates complete:
 
-1. Inspect their output.
-2. Decide whether the phase gate passes.
-3. If not, create/update the needed task and send the responsible teammate a correction prompt if the harness supports continuing agents; otherwise spawn a new teammate with the correction context.
-4. Repeat until the phase gate passes.
+1. Inspect their output as the user's proxy, not as a passive coordinator.
+2. Accept, reject, or correct claims before relying on them. Especially verify any claimed blocker, constraint, workaround, or "done" state against code, tests, logs, explicit user requirements, or known business rules.
+3. Decide whether the phase gate passes.
+4. If not, create/update the needed task and send the responsible teammate a correction prompt if the harness supports continuing agents; otherwise spawn a new teammate with the correction context.
+5. Repeat until the phase gate passes.
 
 When teammates are blocked, idle, or interrupted:
 
-- If blocked, check whether the blocking task is truly incomplete; unblock only by completing or correcting the dependency.
+- If blocked, check whether the blocking task is truly incomplete and whether the claimed blocker is real. Unblock only by completing/correcting the dependency, rejecting a false blocker, or asking the user when the blocker is a real user/business decision.
 - If idle after completion, clean up or leave it alone depending on available harness controls.
 - If interrupted, resume with explicit context if the harness supports continuation; otherwise spawn a replacement teammate.
 - If the harness lacks team shutdown or message-continuation tools, document the state and proceed with available Task/Agent tools.
 
 Review loop:
 
-- Reviewer findings are inputs to Team Lead decision-making, not automatic commands.
+- Reviewer findings and all other teammate claims are inputs to Team Lead decision-making, not automatic commands.
 - Accepted design findings must be written back to the design artifact before another design review.
 - Accepted code findings must be fixed by developer before another code review.
 - Accepted test failures must be fixed and tested again.
