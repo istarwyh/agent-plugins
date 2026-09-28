@@ -1,7 +1,7 @@
 {
   "name": "openai-plugin",
   "description": "Generate images through OpenAI-compatible CLI providers and Codex CLI OAuth, with explicit opt-in Alibaba Cloud OSS upload through oss-plugin.",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "author": {
     "name": "openai-cli-image",
     "email": ""
