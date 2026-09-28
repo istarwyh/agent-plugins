@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "fe99e634-3a09-4d10-b942-bf744588a093",
+  "path": "plugins/social-autopilot-plugin/skills/social-autopilot",
+  "path_key": "plugins/social-autopilot-plugin/skills/social-autopilot",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

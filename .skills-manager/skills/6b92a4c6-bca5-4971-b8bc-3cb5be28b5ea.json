@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "6b92a4c6-bca5-4971-b8bc-3cb5be28b5ea",
+  "path": "plugins/chrome-fetch-plugin/skills/chrome-fetch",
+  "path_key": "plugins/chrome-fetch-plugin/skills/chrome-fetch",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "013385fc-4dd6-4b56-a4e0-22dd3bdccf12",
+  "path": "plugins/oss-plugin/skills/oss-skill",
+  "path_key": "plugins/oss-plugin/skills/oss-skill",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

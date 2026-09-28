@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "5d93e255-8f66-405f-8dc1-78e4593f5c3a",
+  "path": "plugins/openai-plugin/skills/codex-image",
+  "path_key": "plugins/openai-plugin/skills/codex-image",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

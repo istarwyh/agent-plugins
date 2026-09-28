@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "17d9a70f-fc5c-4526-b3a8-9838f1c9919b",
+  "path": "plugins/xiaohongshu-plugin/xiaohongshu-skills/skills/xhs-content-ops",
+  "path_key": "plugins/xiaohongshu-plugin/xiaohongshu-skills/skills/xhs-content-ops",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "275e08c8-a4e3-4cdc-b811-2acf52535013",
+  "path": "plugins/env-config-plugin/skills/configuring-env",
+  "path_key": "plugins/env-config-plugin/skills/configuring-env",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

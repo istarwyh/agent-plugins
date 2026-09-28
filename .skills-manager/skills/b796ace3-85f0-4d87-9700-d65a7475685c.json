@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "b796ace3-85f0-4d87-9700-d65a7475685c",
+  "path": "plugins/swarm-plugin/skills/swarm-skill",
+  "path_key": "plugins/swarm-plugin/skills/swarm-skill",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

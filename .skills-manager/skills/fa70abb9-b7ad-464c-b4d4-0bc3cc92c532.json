@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "fa70abb9-b7ad-464c-b4d4-0bc3cc92c532",
+  "path": "plugins/xiaohongshu-plugin/skills/xhs-cover",
+  "path_key": "plugins/xiaohongshu-plugin/skills/xhs-cover",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

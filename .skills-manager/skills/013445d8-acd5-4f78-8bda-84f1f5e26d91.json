@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "013445d8-acd5-4f78-8bda-84f1f5e26d91",
+  "path": "plugins/xiaohongshu-plugin/skills/xiaohongshu-skill",
+  "path_key": "plugins/xiaohongshu-plugin/skills/xiaohongshu-skill",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

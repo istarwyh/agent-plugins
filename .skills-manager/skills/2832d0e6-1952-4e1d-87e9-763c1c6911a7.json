@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "2832d0e6-1952-4e1d-87e9-763c1c6911a7",
+  "path": "plugins/openai-plugin/skills/image-skill",
+  "path_key": "plugins/openai-plugin/skills/image-skill",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

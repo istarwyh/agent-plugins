@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "a8a4ac14-467d-40b7-917a-667973e95f5d",
+  "path": "plugins/xiaohongshu-plugin/skills/xhs-profile",
+  "path_key": "plugins/xiaohongshu-plugin/skills/xhs-profile",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

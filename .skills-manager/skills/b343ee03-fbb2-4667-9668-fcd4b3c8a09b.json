@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "b343ee03-fbb2-4667-9668-fcd4b3c8a09b",
+  "path": "plugins/wechat-plugin/skills/wechat-cover-skill",
+  "path_key": "plugins/wechat-plugin/skills/wechat-cover-skill",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

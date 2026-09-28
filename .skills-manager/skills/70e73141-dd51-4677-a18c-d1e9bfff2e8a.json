@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "70e73141-dd51-4677-a18c-d1e9bfff2e8a",
+  "path": "plugins/meta-plugin/skills/notify-on-complete",
+  "path_key": "plugins/meta-plugin/skills/notify-on-complete",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

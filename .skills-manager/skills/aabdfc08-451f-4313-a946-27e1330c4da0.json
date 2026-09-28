@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "aabdfc08-451f-4313-a946-27e1330c4da0",
+  "path": "plugins/xiaohongshu-plugin/skills/post-to-xhs",
+  "path_key": "plugins/xiaohongshu-plugin/skills/post-to-xhs",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}
