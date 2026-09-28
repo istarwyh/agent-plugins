@@ -1,11 +1,12 @@
 ---
 name: codex-image
-description: Generate images through Codex CLI's built-in image_gen tool with gpt-image-2 and Codex OAuth, without managing an OpenAI API key. Use this skill when the user asks for /codex-image, wants to generate images from a prompt through Codex, mentions Codex image generation, gpt-image-2 through Codex OAuth, or wants image files saved locally from Claude Code.
-argument-hint: "[--size <WxH>] [--quality low|medium|high|auto] [--out <path>] [-n <count>] <image prompt>"
+description: Generate images through Codex CLI's built-in image_gen tool with gpt-image-2 and Codex OAuth, optionally uploading successful local results to Alibaba Cloud OSS. Use this skill when the user asks for /codex-image, Codex image generation, gpt-image-2 through Codex OAuth, local image files from Claude Code, or an image-generation flow that explicitly ends with OSS or image-hosting upload.
+argument-hint: "[--size <WxH>] [--quality low|medium|high|auto] [--out <path>] [-n <count>] [--upload oss] [--oss-prefix <prefix>] <image prompt>"
 allowed-tools:
   - Bash
   - Read
   - AskUserQuestion
+  - Skill
 ---
 
 # Codex Image Generation
@@ -35,6 +36,8 @@ Parse these arguments from the slash-command input:
 | `--quality` | `low`, `medium`, `high`, `auto` | `auto` | Generation quality |
 | `--out` | directory path | project root | Directory where images should be saved |
 | `-n` | `1` to `10` | `1` | Number of images to generate |
+| `--upload` | `oss` | unset | Upload verified images to Alibaba Cloud OSS |
+| `--oss-prefix` | OSS key prefix | derived from `--out` | Prefix for uploaded object keys |
 
 All remaining text is the image prompt. If the prompt is empty, ask the user what image to generate before running Codex.
 
@@ -116,7 +119,23 @@ For multiple images, verify every suffixed file.
 
 Use the `Read` tool on each generated PNG so the user sees the image inside Claude Code before you summarize anything.
 
-7. Report concise metadata only after all PNG files have been displayed.
+7. If and only if the user explicitly requested OSS/image-hosting upload or
+   supplied `--upload oss`, invoke `oss-plugin:oss-skill` with the `Skill` tool.
+   Upload each verified local PNG with its filename under `--oss-prefix`. When
+   no prefix was supplied, derive a relative, slash-separated prefix from
+   `--out`; use `generated/openai-images` when no meaningful relative path is
+   available.
+
+   Ask the OSS skill to use its upload command with `--url-mode auto`. Do not
+   pass `--overwrite` unless the user explicitly requested replacement. Never
+   include OSS credentials in the prompt, transcript, or provider memory.
+
+   If `oss-plugin:oss-skill` is unavailable, its `.env` is incomplete, or an
+   upload fails, keep the local generation successful. Report the local files
+   and a concise upload error with the setup or retry action.
+
+8. Report concise metadata only after all PNG files have been displayed and any
+   requested upload attempt has finished.
 
 ## Output Format
 
@@ -132,6 +151,8 @@ Count: <count>
 Auth: Codex OAuth
 Saved files:
 - <path> (<byte size>)
+OSS uploads: <uploaded count>/<count> (only when requested)
+- <local path> -> <object key> -> <public or signed URL>
 ```
 
 Do not return shell commands, Codex transcripts, generated code, raw JSON, image bytes, or base64 unless debugging a failure.
@@ -147,6 +168,9 @@ Do not return shell commands, Codex transcripts, generated code, raw JSON, image
 | Rate limit | Tell the user to wait and retry later. |
 | Trust or workspace error | Keep `--skip-git-repo-check`; if it still fails, ask the user to trust the project in Codex configuration. |
 | REST API 401 with OAuth token | Do not retry via REST. OAuth is expected to work through `codex exec`, not direct API calls. |
+| OSS skill missing | Keep local results and tell the user to install `oss-plugin`. |
+| OSS configuration missing | Keep local results and list only the missing variable names reported by `oss-skill`. |
+| OSS object exists | Keep local results; choose a new key or ask whether replacement is intended. |
 
 ## Rules
 
@@ -157,4 +181,7 @@ Do not return shell commands, Codex transcripts, generated code, raw JSON, image
 - Always verify and then display every generated PNG with the `Read` tool before reporting completion.
 - Do not overwrite existing files.
 - Save images to the project root by default unless the user gives `--out`.
+- Never upload unless the user explicitly requests OSS/image-hosting upload.
+- Delegate uploads to `oss-plugin:oss-skill`; do not duplicate its credential or SDK logic.
+- Treat OSS upload as best-effort after local generation, never as a reason to discard local results.
 - Keep responses concise and include the local file paths after success.

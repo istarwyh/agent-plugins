@@ -1,6 +1,6 @@
 ---
 name: image-skill
-description: Use this skill whenever the user wants to generate an image with the OpenAI CLI, mentions OpenAI-compatible image generation, gpt-image-2, cliproxyapi, sk-local-gemini, or asks to test image generation through a local OpenAI CLI proxy. This skill captures the reliable workflow for creating PNG images, remembering the provider after the first successful generation, and avoiding dumped base64 output.
+description: Generates images with the OpenAI CLI and optionally uploads successful local results to Alibaba Cloud OSS. Use whenever the user mentions OpenAI-compatible image generation, gpt-image-2, cliproxyapi, sk-local-gemini, a local OpenAI CLI proxy, or an image-generation flow that explicitly ends with OSS or image-hosting upload.
 ---
 
 # OpenAI CLI Image Skill
@@ -167,6 +167,20 @@ Quality: <quality, if applicable>
 Saved file: <path>
 ```
 
+7. If and only if the user explicitly requested OSS/image-hosting upload, invoke
+   `oss-plugin:oss-skill` with the `Skill` tool after all images are verified and
+   displayed. Upload each local PNG under the requested object-key prefix. If no
+   prefix was supplied, derive one from the output directory and preserve each
+   filename.
+
+   Ask the OSS skill to upload with `--url-mode auto`. Do not pass `--overwrite`
+   unless the user explicitly requested replacement. Never include OSS
+   credentials in prompts, logs, or the provider-memory file.
+
+   A missing OSS skill, incomplete `.env`, or failed upload does not invalidate
+   successful local image generation. Return the local files plus a concise
+   upload error and recovery action.
+
 ## Recommended Command For cliproxyapi
 
 Use a timestamped filename to avoid overwriting prior generations:
@@ -193,8 +207,11 @@ file "$OUT"
 - Verify every saved image with `file`.
 - Always use the `Read` tool to display every generated PNG inline before reporting completion.
 - Report only concise metadata: prompt, model/auth route, size, quality if applicable, and saved file path.
+- For requested OSS uploads, also report local path, object key, and the public or signed URL returned by `oss-skill`.
 - Do not return shell commands, generated code, raw JSON, `b64_json`, or base64 unless debugging a failure.
 - Do not run raw `images generate --format json` without `--transform 'data.0.b64_json' --raw-output` unless debugging a provider issue.
+- Never upload unless the user explicitly requests OSS/image-hosting upload.
+- Delegate OSS work to `oss-plugin:oss-skill`; do not duplicate its credential or SDK logic.
 
 ## Troubleshooting
 
