@@ -50,11 +50,18 @@ Each skill is a self-contained folder with instructions, scripts, and resources 
 | `/gemini-skill` | 当用户想通过 Google Gemini 生成文本、生成图片、或提到"Gemini"/"问问Gemini"时触发。支持文本问答和图片创建，使用浏览器自动化与 Gemini 网页交互。 |
 
 ### meta-plugin
-> Meta plugin for Claude Code utilities. Includes: 1) Slash command generator with semantic versioning, automatic backups, and changelog tracking; 2) Task completion notifications with cross-platform support (macOS/Linux/Windows).
+> Meta plugin for Claude Code utilities. Includes: 1) Slash command generator with semantic versioning, automatic backups, and changelog tracking; 2) Task completion notifications with cross-platform support (macOS/Linux/Windows); 3) GitHub PR automation subagent for polling, fixing, validating, pushing, and safely squash-merging authorized PRs.
 
 | Skill | Description |
 |-------|-------------|
 | `/notify-on-complete` | Send system notifications when Claude Code completes tasks. Use when the user wants to configure ... |
+
+### ntfs-plugin
+> Manual macOS NTFS remount workflow for Hasleo NTFS for Mac and macFUSE. Use when NTFS disks mount read-only, Hasleo automatic remount fails, or macFUSE/Benjamin Fleischer permission issues appear.
+
+| Skill | Description |
+|-------|-------------|
+| `/manual-ntfs-mount` | Diagnoses and manually remounts external NTFS drives on macOS through Hasleo NTFS for Mac and mac... |
 
 ### openai-plugin
 > Generate images through OpenAI-compatible CLI providers and Codex CLI OAuth, with explicit opt-in Alibaba Cloud OSS upload through oss-plugin.
