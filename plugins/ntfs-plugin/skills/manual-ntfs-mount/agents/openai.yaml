@@ -1,0 +1,4 @@
+interface:
+  display_name: "Manual NTFS Mount"
+  short_description: "Safely remount NTFS via Hasleo/macFUSE"
+  default_prompt: "Use $manual-ntfs-mount to diagnose and manually remount an external NTFS drive with Hasleo and macFUSE."

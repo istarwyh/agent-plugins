@@ -67,6 +67,12 @@
       "description": "Generate images through OpenAI-compatible CLI providers and Codex CLI OAuth, with explicit opt-in Alibaba Cloud OSS upload through oss-plugin.",
       "source": "./plugins/openai-plugin",
       "category": "productivity-organization"
+    },
+    {
+      "name": "ntfs-plugin",
+      "description": "Manual macOS NTFS remount workflow for Hasleo NTFS for Mac and macFUSE. Use when NTFS disks mount read-only, Hasleo automatic remount fails, or macFUSE/Benjamin Fleischer permission issues appear.",
+      "source": "./plugins/ntfs-plugin",
+      "category": "productivity-organization"
     }
   ]
 }

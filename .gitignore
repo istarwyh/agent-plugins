@@ -30,6 +30,7 @@ scripts/*.pyc
 !plugins/oss-plugin/skills/oss-skill/.env.example
 
 # Browser/Auth state (if accidentally placed outside data/)
+.playwright-mcp/
 browser_state/
 auth/
 auth_info.json

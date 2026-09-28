@@ -56,6 +56,13 @@ Each skill is a self-contained folder with instructions, scripts, and resources 
 |-------|-------------|
 | `/notify-on-complete` | Send system notifications when Claude Code completes tasks. Use when the user wants to configure ... |
 
+### ntfs-plugin
+> Manual macOS NTFS remount workflow for Hasleo NTFS for Mac and macFUSE. Use when NTFS disks mount read-only, Hasleo automatic remount fails, or macFUSE/Benjamin Fleischer permission issues appear.
+
+| Skill | Description |
+|-------|-------------|
+| `/manual-ntfs-mount` | Diagnoses and manually remounts external NTFS drives on macOS through Hasleo NTFS for Mac and mac... |
+
 ### openai-plugin
 > Generate images through OpenAI-compatible CLI providers and Codex CLI OAuth, with explicit opt-in Alibaba Cloud OSS upload through oss-plugin.
 
