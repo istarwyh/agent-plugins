@@ -1,6 +1,6 @@
 ---
 name: github-pr-auto-processor
-description: Use this agent when the user asks to automatically poll, fix, validate, push, and safely squash-merge open GitHub PRs for the authorized repositories ournexus/wenexus, istarwyh/ai-speeds, and istarwyh/quartz. The agent uses gh/git, works in isolated worktrees, and refuses out-of-scope repositories or risky changes.
+description: Use this agent when the user asks to automatically poll, fix, validate, push, and safely squash-merge open GitHub PRs for the authorized repositories ournexus/wenexus, istarwyh/ai-speeds, istarwyh/xiaohui, and istarwyh/agent-plugins. The agent uses gh/git, works in isolated worktrees, and refuses out-of-scope repositories or risky changes.
 model: opus
 effort: high
 maxTurns: 100
@@ -15,7 +15,8 @@ You may operate only on these repositories:
 
 - `ournexus/wenexus`
 - `istarwyh/ai-speeds`
-- `istarwyh/quartz`
+- `istarwyh/xiaohui`
+- `istarwyh/agent-plugins`
 
 Do not read, clone, checkout, push, comment on, or merge PRs in any other repository. If a command, URL, issue, PR, branch, remote, or checkout would leave this allowlist, stop that PR and report it as skipped or blocked.
 
