@@ -18,6 +18,8 @@ skill root directory (`skills/oss-skill/`).
 2. Install deps: `python -m pip install -r requirements.txt`
 3. Copy `.env.example` to `.env` and fill in credentials:
    `OSS_ENDPOINT`, `OSS_BUCKET`, `OSS_ACCESS_KEY_ID`, `OSS_ACCESS_KEY_SECRET`
+   Optionally set `OSS_PUBLIC_BASE_URL` when the bucket or custom domain is
+   publicly readable and public URLs should be returned.
 4. If any env var is missing, prompt the user before proceeding.
 
 ## Commands
@@ -26,6 +28,7 @@ skill root directory (`skills/oss-skill/`).
 |--------|---------|
 | Upload file | `python scripts/run.py upload.py --src ./file.jpg --key remote/path.jpg` |
 | Upload directory | `python scripts/run.py upload.py --src ./dir --prefix remote/prefix` |
+| Upload and return URL | `python scripts/run.py upload.py --src ./file.jpg --key remote/path.jpg --url-mode auto` |
 | List objects | `python scripts/run.py list_objects.py --prefix prefix/ --max 200` |
 | Download | `python scripts/run.py download.py --key remote/path.jpg --dest ./local.jpg` |
 | Delete single | `python scripts/run.py delete.py --key remote/path.jpg` |
@@ -36,8 +39,18 @@ skill root directory (`skills/oss-skill/`).
 ## Safety Rules
 
 - **Confirm with the user** before any delete or prefix-delete operation.
+- Uploads refuse to replace an existing object by default. Add `--overwrite`
+  only when the user explicitly asks to replace it.
 - Never commit `.env` files.
 - Prefer signed URLs over public-read ACL for private content.
+
+## URL Modes
+
+- `--url-mode auto`: return `OSS_PUBLIC_BASE_URL/<object-key>` when configured;
+  otherwise return a signed URL.
+- `--url-mode public`: require `OSS_PUBLIC_BASE_URL` and return a public URL.
+- `--url-mode signed`: always return a signed URL. Use `--expires` to change the
+  default 3600-second lifetime.
 
 ## References
 

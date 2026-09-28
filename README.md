@@ -57,12 +57,12 @@ Each skill is a self-contained folder with instructions, scripts, and resources 
 | `/notify-on-complete` | Send system notifications when Claude Code completes tasks. Use when the user wants to configure ... |
 
 ### openai-plugin
-> Generate images through OpenAI-compatible CLI providers and Codex CLI OAuth. Includes cliproxyapi defaults plus a codex-image skill for local gpt-image-2 output without API key management.
+> Generate images through OpenAI-compatible CLI providers and Codex CLI OAuth, with explicit opt-in Alibaba Cloud OSS upload through oss-plugin.
 
 | Skill | Description |
 |-------|-------------|
-| `/codex-image` | Generate images through Codex CLI's built-in image_gen tool with gpt-image-2 and Codex OAuth, wit... |
-| `/image-skill` | Use this skill whenever the user wants to generate an image with the OpenAI CLI, mentions OpenAI-... |
+| `/codex-image` | Generate images through Codex CLI's built-in image_gen tool with gpt-image-2 and Codex OAuth, opt... |
+| `/image-skill` | Generates images with the OpenAI CLI and optionally uploads successful local results to Alibaba C... |
 
 ### oss-plugin
 > Trigger when the user asks to upload, download, list, delete, sync, or generate signed URLs for files on Alibaba Cloud OSS (Object Storage Service). Operates via Python CLI scripts wrapping the oss2 SDK.

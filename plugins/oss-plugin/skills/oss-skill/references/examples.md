@@ -16,6 +16,22 @@ python scripts/run.py upload.py --src ./wedding/assets --prefix wedding/assets
 # 3. Script reports count and total size uploaded
 ```
 
+Uploads refuse to replace existing object keys. Use `--overwrite` only after
+the user explicitly requests replacement.
+
+## Upload and Return a URL
+
+```bash
+python scripts/run.py upload.py \
+  --src ./generated/diagram.png \
+  --key courses/lesson-24.8/diagram.png \
+  --url-mode auto
+```
+
+When `OSS_PUBLIC_BASE_URL` is configured, `auto` returns a public URL. Otherwise
+it returns a one-hour signed URL. Use `--url-mode signed --expires 7200` to
+request a two-hour signed URL explicitly.
+
 ## Generate a Signed URL
 
 ```bash

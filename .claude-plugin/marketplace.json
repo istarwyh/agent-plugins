@@ -64,7 +64,7 @@
     },
     {
       "name": "openai-plugin",
-      "description": "Generate images through OpenAI-compatible CLI providers and Codex CLI OAuth. Includes cliproxyapi defaults plus a codex-image skill for local gpt-image-2 output without API key management.",
+      "description": "Generate images through OpenAI-compatible CLI providers and Codex CLI OAuth, with explicit opt-in Alibaba Cloud OSS upload through oss-plugin.",
       "source": "./plugins/openai-plugin",
       "category": "productivity-organization"
     }

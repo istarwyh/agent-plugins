@@ -1,6 +1,7 @@
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import quote
 
 import oss2
 from dotenv import load_dotenv
@@ -42,3 +43,10 @@ def format_size(size: int) -> str:
     val /= 1024
     idx += 1
   return f"{val:.1f} {units[idx]}"
+
+
+def public_url(key: str) -> str | None:
+  base_url = os.getenv("OSS_PUBLIC_BASE_URL", "").strip().rstrip("/")
+  if not base_url:
+    return None
+  return f"{base_url}/{quote(key, safe='/')}"
